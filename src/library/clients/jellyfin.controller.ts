@@ -137,7 +137,7 @@ export class JellyfinController implements ILibraryController {
 
 		Logger.debug(`Refreshing Library`)
 
-		if (this.show.Id) {
+		if (this.show?.Id) {
 			Logger.debug(`Jellyfin Show already exits, refreshing show only`)
 			await this.jellyfin.refreshSeries(this.show.Id)
 		} else {

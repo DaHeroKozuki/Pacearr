@@ -137,7 +137,7 @@ export class EmbyController implements ILibraryController {
 
 		Logger.debug(`Refreshing Library`)
 
-		if (this.show.Id) {
+		if (this.show?.Id) {
 			Logger.debug(`Emby Show already exits, refreshing show only`)
 			await this.emby.refreshSeries(this.show.Id)
 		} else {
