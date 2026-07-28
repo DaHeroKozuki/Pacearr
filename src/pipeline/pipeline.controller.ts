@@ -122,7 +122,7 @@ export class PipelineController {
 					successfull.push({ arc: ma.arc, episode: me.episode })
 				} catch (e: any) {
 					Logger.error(
-						`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context.pipeline.getReport().percentageString()} - Error processing file, requeueing...`,
+						`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context?.pipeline?.getReport()?.percentageString()} - Error processing file, requeueing...`,
 					)
 					Logger.error(e)
 					failed.push({ arc: ma.arc, episode: me.episode })
@@ -199,7 +199,7 @@ export class PipelineController {
 	async updatemetadata(arc: number, episode: number, suppressLog?: boolean) {
 		Context.metadata.checkMetadataDownloaded()
 		Logger.debug(
-			`S${arc}E${String(episode).padStart(2, '0')}${Context.pipeline.getReport().percentageString()} - Attempting Metadata Update`,
+			`S${arc}E${String(episode).padStart(2, '0')}${Context?.pipeline?.getReport()?.percentageString()} - Attempting Metadata Update`,
 		)
 
 		let _episode = await Context.metadata.getEpisode(arc, episode)
@@ -213,7 +213,7 @@ export class PipelineController {
 		await Context.library.updateSeasonMetadata(arc)
 		await Context.library.updateShowMetadata()
 		Logger[suppressLog ? 'debug' : 'info'](
-			`S${arc}E${String(episode).padStart(2, '0')}${Context.pipeline.getReport().percentageString()} - Exists on Media Server (Metadata refreshed)`,
+			`S${arc}E${String(episode).padStart(2, '0')}${Context?.pipeline?.getReport()?.percentageString()} - Exists on Media Server (Metadata refreshed)`,
 		)
 	}
 
@@ -268,7 +268,7 @@ export class PipelineController {
 	) {
 		Context.metadata.checkMetadataDownloaded()
 		Logger.debug(
-			`S${arc}E${String(episode).padStart(2, '0')}${Context.pipeline.getReport().percentageString()} - Verifying path format...`,
+			`S${arc}E${String(episode).padStart(2, '0')}${Context?.pipeline?.getReport()?.percentageString()} - Verifying path format...`,
 		)
 
 		let _episode = await Context.metadata.getEpisode(arc, episode)
@@ -302,7 +302,7 @@ export class PipelineController {
 			)
 
 			Logger.info(
-				`S${arc}E${String(episode).padStart(2, '0')}${Context.pipeline.getReport().percentageString()} - File on Media Server with wrong format, renaming...`,
+				`S${arc}E${String(episode).padStart(2, '0')}${Context?.pipeline?.getReport()?.percentageString()} - File on Media Server with wrong format, renaming...`,
 			)
 			mkdirSync(targetFolder, {
 				recursive: true,
@@ -329,7 +329,7 @@ export class PipelineController {
 			unlinkSync(serverFile)
 			if (trashFiles.length > 0)
 				Logger.info(
-					`S${arc}E${String(episode).padStart(2, '0')}${Context.pipeline.getReport().percentageString()} - Cleaning ${trashFiles.length} trash files...`,
+					`S${arc}E${String(episode).padStart(2, '0')}${Context?.pipeline?.getReport()?.percentageString()} - Cleaning ${trashFiles.length} trash files...`,
 				)
 			for (let t of trashFiles) {
 				unlinkSync(path.resolve(serverFolder, t))
@@ -346,12 +346,12 @@ export class PipelineController {
 				updateNotificationReceived
 			) {
 				Logger.debug(
-					`S${arc}E${String(episode).padStart(2, '0')}${Context.pipeline.getReport().percentageString()} - Correctly formatted...`,
+					`S${arc}E${String(episode).padStart(2, '0')}${Context?.pipeline?.getReport()?.percentageString()} - Correctly formatted...`,
 				)
 				await this.updatemetadata(arc, episode)
 			} else {
 				Logger.info(
-					`S${arc}E${String(episode).padStart(2, '0')}${Context.pipeline.getReport().percentageString()} - Already present`,
+					`S${arc}E${String(episode).padStart(2, '0')}${Context?.pipeline?.getReport()?.percentageString()} - Already present`,
 				)
 			}
 		}
@@ -364,7 +364,7 @@ export class PipelineController {
 	) {
 		this.report.processedEpisodes++
 		Logger.debug(
-			`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context.pipeline.getReport().percentageString()} - Processing`,
+			`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context?.pipeline?.getReport()?.percentageString()} - Processing`,
 		)
 
 		const skipVerification =
@@ -392,7 +392,7 @@ export class PipelineController {
 				!!me.files?.extended && this.config.PIPELINE_PREFER_EXTENDED,
 			)
 			Logger.info(
-				`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context.pipeline.getReport().percentageString()} - Forced re-download from settings [${this.formatDownloadQueueStatus(queueResult)}]`,
+				`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context?.pipeline?.getReport()?.percentageString()} - Forced re-download from settings [${this.formatDownloadQueueStatus(queueResult)}]`,
 			)
 			return
 		}
@@ -403,7 +403,7 @@ export class PipelineController {
 		if (file) {
 			if (skipVerification) {
 				Logger.debug(
-					`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context.pipeline.getReport().percentageString()} - Present`,
+					`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context?.pipeline?.getReport()?.percentageString()} - Present`,
 				)
 				if (!this.config.PIPELINE_SKIP_ORGANIZE_PRESENT_FILES) {
 					await this.organizeFile(
@@ -418,32 +418,32 @@ export class PipelineController {
 					await this.updatemetadata(ma.arc, me.episode)
 				} else {
 					Logger.info(
-						`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context.pipeline.getReport().percentageString()} - Exist on Media Server (Verification skipped)...`,
+						`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context?.pipeline?.getReport()?.percentageString()} - Exist on Media Server (Verification skipped)...`,
 					)
 				}
 			} else {
 				Logger.debug(
-					`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context.pipeline.getReport().percentageString()} - Exists on Media Server (Verifying)`,
+					`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context?.pipeline?.getReport()?.percentageString()} - Exists on Media Server (Verifying)`,
 				)
 
 				Logger.debug(
-					`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context.pipeline.getReport().percentageString()} - Hashing`,
+					`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context?.pipeline?.getReport()?.percentageString()} - Hashing`,
 				)
 				let CRC32 = await getFileCrc32Hash(file)
 				Logger.debug(
-					`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context.pipeline.getReport().percentageString()} - Hash complete (${CRC32})`,
+					`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context?.pipeline?.getReport()?.percentageString()} - Hash complete (${CRC32})`,
 				)
 
 				if (!!me.files?.extended && this.config.PIPELINE_PREFER_EXTENDED) {
 					Logger.debug(
-						`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context.pipeline.getReport().percentageString()} - Extended wanted`,
+						`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context?.pipeline?.getReport()?.percentageString()} - Extended wanted`,
 					)
 					if (
 						CRC32 == me.files?.extended?.CRC32 ||
 						me.files?.extended?.CRC32_inFileName
 					) {
 						Logger.debug(
-							`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context.pipeline.getReport().percentageString()} - Extended present`,
+							`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context?.pipeline?.getReport()?.percentageString()} - Extended present`,
 						)
 						if (!this.config.PIPELINE_SKIP_ORGANIZE_PRESENT_FILES) {
 							await this.organizeFile(
@@ -458,23 +458,23 @@ export class PipelineController {
 							await this.updatemetadata(ma.arc, me.episode)
 						} else
 							Logger.info(
-								`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context.pipeline.getReport().percentageString()} - Already present`,
+								`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context?.pipeline?.getReport()?.percentageString()} - Already present`,
 							)
 					} else if (
 						CRC32 == me.files?.standard?.CRC32 ||
 						me.files?.standard?.CRC32_inFileName
 					) {
 						Logger.debug(
-							`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context.pipeline.getReport().percentageString()} - Standard present`,
+							`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context?.pipeline?.getReport()?.percentageString()} - Standard present`,
 						)
 						if (this.config.PIPELINE_SKIP_DOWNLOADS) {
 							Logger.info(
-								`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context.pipeline.getReport().percentageString()} - Standard instead of extended [Download skipped]`,
+								`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context?.pipeline?.getReport()?.percentageString()} - Standard instead of extended [Download skipped]`,
 							)
 						} else {
 							const queueResult = await this.addToDownloadQueue(me, true)
 							Logger.info(
-								`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context.pipeline.getReport().percentageString()} - Standard instead of extended [${this.formatDownloadQueueStatus(queueResult)}]`,
+								`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context?.pipeline?.getReport()?.percentageString()} - Standard instead of extended [${this.formatDownloadQueueStatus(queueResult)}]`,
 							)
 						}
 					}
@@ -483,14 +483,14 @@ export class PipelineController {
 					!this.config.PIPELINE_PREFER_EXTENDED
 				) {
 					Logger.debug(
-						`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context.pipeline.getReport().percentageString()} - Standard wanted`,
+						`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context?.pipeline?.getReport()?.percentageString()} - Standard wanted`,
 					)
 					if (
 						CRC32 == me.files?.standard?.CRC32 ||
 						CRC32 == me.files?.standard?.CRC32_inFileName
 					) {
 						Logger.debug(
-							`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context.pipeline.getReport().percentageString()} - Standard present`,
+							`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context?.pipeline?.getReport()?.percentageString()} - Standard present`,
 						)
 						if (!this.config.PIPELINE_SKIP_ORGANIZE_PRESENT_FILES) {
 							await this.organizeFile(
@@ -505,23 +505,23 @@ export class PipelineController {
 							await this.updatemetadata(ma.arc, me.episode)
 						} else
 							Logger.info(
-								`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context.pipeline.getReport().percentageString()} - Already present`,
+								`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context?.pipeline?.getReport()?.percentageString()} - Already present`,
 							)
 					} else if (
 						CRC32 == me.files?.extended?.CRC32 ||
 						CRC32 == me.files?.extended?.CRC32_inFileName
 					) {
 						Logger.debug(
-							`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context.pipeline.getReport().percentageString()} - Extended present`,
+							`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context?.pipeline?.getReport()?.percentageString()} - Extended present`,
 						)
 						if (this.config.PIPELINE_SKIP_DOWNLOADS) {
 							Logger.info(
-								`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context.pipeline.getReport().percentageString()} - Extended instead of Standard [Download skipped]`,
+								`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context?.pipeline?.getReport()?.percentageString()} - Extended instead of Standard [Download skipped]`,
 							)
 						} else {
 							const queueResult = await this.addToDownloadQueue(me)
 							Logger.info(
-								`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context.pipeline.getReport().percentageString()} - Extended instead of Standard [${this.formatDownloadQueueStatus(queueResult)}]`,
+								`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context?.pipeline?.getReport()?.percentageString()} - Extended instead of Standard [${this.formatDownloadQueueStatus(queueResult)}]`,
 							)
 						}
 					}
@@ -530,7 +530,7 @@ export class PipelineController {
 					CRC32 == me.files?.standard?.CRC32_inFileName
 				) {
 					Logger.debug(
-						`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context.pipeline.getReport().percentageString()} - Standard present`,
+						`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context?.pipeline?.getReport()?.percentageString()} - Standard present`,
 					)
 					if (!this.config.PIPELINE_SKIP_ORGANIZE_PRESENT_FILES) {
 						await this.organizeFile(
@@ -545,29 +545,29 @@ export class PipelineController {
 						await this.updatemetadata(ma.arc, me.episode)
 					} else
 						Logger.info(
-							`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context.pipeline.getReport().percentageString()} - Already present`,
+							`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context?.pipeline?.getReport()?.percentageString()} - Already present`,
 						)
 				} else if (
 					CRC32 == me.files?.extended?.CRC32 ||
 					CRC32 == me.files?.extended?.CRC32_inFileName
 				) {
 					Logger.debug(
-						`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context.pipeline.getReport().percentageString()} - Extended present`,
+						`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context?.pipeline?.getReport()?.percentageString()} - Extended present`,
 					)
 					if (this.config.PIPELINE_SKIP_DOWNLOADS) {
 						Logger.info(
-							`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context.pipeline.getReport().percentageString()} - Extended instead of Standard [Download skipped]`,
+							`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context?.pipeline?.getReport()?.percentageString()} - Extended instead of Standard [Download skipped]`,
 						)
 					} else {
 						const queueResult = await this.addToDownloadQueue(me)
 						Logger.info(
-							`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context.pipeline.getReport().percentageString()} - Extended instead of Standard [${this.formatDownloadQueueStatus(queueResult)}]`,
+							`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context?.pipeline?.getReport()?.percentageString()} - Extended instead of Standard [${this.formatDownloadQueueStatus(queueResult)}]`,
 						)
 					}
 				} else {
 					if (this.config.PIPELINE_SKIP_DOWNLOADS) {
 						Logger.info(
-							`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context.pipeline.getReport().percentageString()} - CRC32 Mismatch [Download skipped]`,
+							`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context?.pipeline?.getReport()?.percentageString()} - CRC32 Mismatch [Download skipped]`,
 						)
 					} else {
 						const queueResult = await this.addToDownloadQueue(
@@ -575,19 +575,19 @@ export class PipelineController {
 							this.config.PIPELINE_PREFER_EXTENDED && !!me.files?.extended,
 						)
 						Logger.info(
-							`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context.pipeline.getReport().percentageString()} - CRC32 Mismatch [${this.formatDownloadQueueStatus(queueResult)}]`,
+							`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context?.pipeline?.getReport()?.percentageString()} - CRC32 Mismatch [${this.formatDownloadQueueStatus(queueResult)}]`,
 						)
 					}
 				}
 			}
 		} else {
 			Logger.debug(
-				`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context.pipeline.getReport().percentageString()} - Missing`,
+				`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context?.pipeline?.getReport()?.percentageString()} - Missing`,
 			)
 
 			if (this.config.PIPELINE_SKIP_DOWNLOADS) {
 				Logger.info(
-					`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context.pipeline.getReport().percentageString()} - Missing [Download skipped]`,
+					`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context?.pipeline?.getReport()?.percentageString()} - Missing [Download skipped]`,
 				)
 			} else {
 				const queueResult = await this.addToDownloadQueue(
@@ -595,7 +595,7 @@ export class PipelineController {
 					this.config.PIPELINE_PREFER_EXTENDED && !!me.files?.extended,
 				)
 				Logger.info(
-					`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context.pipeline.getReport().percentageString()} - Missing [${this.formatDownloadQueueStatus(queueResult)}]`,
+					`S${ma.arc}E${String(me.episode).padStart(2, '0')}${Context?.pipeline?.getReport()?.percentageString()} - Missing [${this.formatDownloadQueueStatus(queueResult)}]`,
 				)
 			}
 		}
