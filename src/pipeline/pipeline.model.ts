@@ -26,6 +26,13 @@ export class PipelineReport {
 	monitoredEpisodes: number = 0
 	status: PipelineStatus = 'PRE'
 	error?: string
+
+	percentageString(): string {
+		if (this.monitoredEpisodes < 1) return ''
+		return ` (${Number(
+			(this.processedEpisodes / this.monitoredEpisodes) * 100,
+		).toFixed(0)}%)`
+	}
 }
 
 export class NoActivePipelineError extends Error {
