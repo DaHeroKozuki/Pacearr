@@ -261,10 +261,10 @@ services:
       # Library 
       - LIBRARY_MEDIA_SERVER=plex 
       - LIBRARY_SERIES_NAME=One Pace
-      #- LIBRARY_SERIES_FOLDER_NAME=One Pace
+      - LIBRARY_SERIES_FOLDER_NAME=One Pace
 
-      #- LIBRARY_FILENAME_FORMAT={SERIES_NAME} - S{ARC}E{EPISODE} - {TITLE}.mkv
-      #- LIBRARY_CREATE_SHOW_IF_NOT_FOUND=true
+      - LIBRARY_FILENAME_FORMAT={SERIES_NAME} - S{ARC}E{EPISODE} - {TITLE}.mkv
+      - LIBRARY_CREATE_SHOW_IF_NOT_FOUND=true
 
 
       # Library - None
@@ -297,11 +297,11 @@ services:
       - TORRENT_USER=<your-username-here>
       - TORRENT_PASSWORD=<your-password-here>
       - TORRENT_CLIENT=qbittorrent
-      #- TORRENT_CLIENT_TIMEOUT=10
-      #- TORRENT_CATEGORY_FORCE=false
-      #- TORRENT_CATEGORY=onepacerr
-      #- TORRENT_CATEGORY_ONCE_COMPLETED=completed
-      #- TORRENT_CHECK_INTERVAL=60
+      - TORRENT_CLIENT_TIMEOUT=10
+      - TORRENT_CATEGORY_FORCE=false
+      - TORRENT_CATEGORY=onepacerr
+      - TORRENT_CATEGORY_ONCE_COMPLETED=completed
+      - TORRENT_CHECK_INTERVAL=60
 
 
 
@@ -336,11 +336,11 @@ services:
 
 
       # Metadata Settings
-      #- METADATA_URL=https://onepacerr.com/api/v1
-      #- METADATA_LANGUAGE=en
-      #- METADATA_POSTER_SET=default
-      #- METADATA_DISABLE_WEBSOCKET=false
-      #- METADATA_CHECK_INTERVAL=3600
+      - METADATA_URL=https://onepacerr.com/api/v1
+      - METADATA_LANGUAGE=en
+      - METADATA_POSTER_SET=default
+      - METADATA_DISABLE_WEBSOCKET=false
+      - METADATA_CHECK_INTERVAL=3600
     volumes:
       - /mnt/Library/Series:/mnt/Library/Series
       - /mnt/Applications/Downloads:/mnt/Applications/Downloads
