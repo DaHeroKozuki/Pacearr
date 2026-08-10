@@ -286,10 +286,17 @@ this.connectWebSocket()
 						reject(new PlexSocketNoResponseError())
 					}, timeout)
 				}
-				await this.plexRetry(
-					() => this.section.update({ path: folder }),
-					"library refresh",
-				)
+				try {
+					await this.plexRetry(
+						() => this.section.update({ path: folder }),
+						"library refresh",
+					)
+				} catch (e) {
+					Logger.warn(
+						`Plex library refresh request failed. Continuing and allowing Plex to process independently.`,
+					)
+					Logger.debug(e)
+				}
 			})
 		} catch (e) {
 			if (e instanceof PlexSocketNoResponseError) {
@@ -306,10 +313,17 @@ this.connectWebSocket()
 		await new Promise<void>(resolve => setTimeout(resolve, 10000))
 
 		// Refresh Plex show object after library changes
-		await this.plexRetry(
-			() => this.fetchShow(),
-			"show lookup",
-		)
+		try {
+			await this.plexRetry(
+				() => this.fetchShow(),
+				"show lookup",
+			)
+		} catch (e) {
+			Logger.warn(
+				`Plex show refresh failed after scan. Continuing safely.`,
+			)
+			Logger.debug(e)
+		}
 	}
 
 	async waitForScanCompletion(): Promise<void> {
