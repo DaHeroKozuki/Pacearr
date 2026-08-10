@@ -174,6 +174,46 @@ export default {
 	 * METADATA
 	 */
 	METADATA_URL: process.env.METADATA_URL || `https://onepacerr.com/api/v1`,
+
+	// Stable6: persistent last-known-good metadata cache
+	METADATA_CACHE_ENABLED:
+		(process.env.METADATA_CACHE_ENABLED || 'true').toLowerCase() === 'true',
+	METADATA_CACHE_FILE:
+		process.env.METADATA_CACHE_FILE || '/data/cache/metadata.json',
+
+	// Stable6: persistent processing state
+	STATE_ENABLED:
+		(process.env.STATE_ENABLED || 'true').toLowerCase() === 'true',
+	STATE_DB:
+		process.env.STATE_DB || '/data/state/onepacerr.db',
+
+	// Stable6: failed/corrupt import quarantine
+	QUARANTINE_ENABLED:
+		(process.env.QUARANTINE_ENABLED || 'true').toLowerCase() === 'true',
+	QUARANTINE_DIR:
+		process.env.QUARANTINE_DIR || '/data/quarantine',
+
+	// Stable6: destination free-space protection
+	MIN_FREE_SPACE_GB:
+		Number.parseInt(process.env.MIN_FREE_SPACE_GB || '20'),
+
+	// Stable6: Plex batch processing limit
+	PLEX_BATCH_SIZE:
+		Number.parseInt(process.env.PLEX_BATCH_SIZE || '20'),
+
+	// Stable6: Plex batch cooldown delay
+	PLEX_BATCH_DELAY_SECONDS:
+		Number.parseInt(process.env.PLEX_BATCH_DELAY_SECONDS || '30'),
+
+	// Stable7: Plex scan control
+	PLEX_SCAN_MIN_WAIT_SECONDS:
+		Number.parseInt(process.env.PLEX_SCAN_MIN_WAIT_SECONDS || '30'),
+
+	PLEX_SCAN_TIMEOUT_SECONDS:
+		Number.parseInt(process.env.PLEX_SCAN_TIMEOUT_SECONDS || '600'),
+
+	PLEX_SCAN_VERIFY:
+		(process.env.PLEX_SCAN_VERIFY || 'true').toLowerCase() === 'true',
 	METADATA_LANGUAGE: process.env.METADATA_LANGUAGE || 'en',
 	METADATA_POSTER_SET: process.env.METADATA_POSTER_SET || 'default',
 	METADATA_DISABLE_WEBSOCKET: /true/i.test(

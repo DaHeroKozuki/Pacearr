@@ -95,6 +95,26 @@ export class DelugeController implements ITorrentController {
 		) as T[]
 	}
 
+	public async removeTorrent(
+		torrent: Partial<Torrent>,
+		removeData: boolean = false,
+	): Promise<void> {
+		Logger.info(
+			`Removing torrent '${torrent.hash}' from Deluge${removeData ? ' and deleting downloaded data' : ''}...`,
+		)
+
+		const { error }: any = await this.client.removeTorrent(
+			torrent.hash,
+			removeData,
+		)
+
+		if (error) {
+			throw new Error(
+				error?.message || String(error),
+			)
+		}
+	}
+
 	public async updateTorrentCategory(
 		torrent: Partial<Torrent>,
 		category: string,

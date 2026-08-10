@@ -1,6 +1,6 @@
 import { Logger } from 'ez-ts-logger'
 import { EventEmitter } from 'node:events'
-import { mkdirSync, readdirSync, unlinkSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, unlinkSync } from 'node:fs'
 import path from 'node:path'
 import environment from '../environment.js'
 import { TargetLibraryFile } from '../library/library.model'
@@ -285,6 +285,14 @@ export class PipelineController {
 		) {
 			let serverFile =
 				await Context.library.getExistingLibraryEpisodeFile(_episode)
+
+			if (!serverFile) {
+				Logger.warn(
+					`S${arc}E${String(episode).padStart(2, '0')} - Plex file path unavailable, skipping rename step`,
+				)
+				return
+			}
+
 			let serverFolder = path.resolve(serverFile, '..')
 			let serverFileName = serverFile.replace(`${serverFolder}${path.sep}`, '')
 
@@ -400,6 +408,16 @@ export class PipelineController {
 		let _episode = await Context.metadata.getEpisode(ma.arc, me.episode)
 
 		let file = await Context.library.getExistingLibraryEpisodeFile(_episode)
+
+		if (!file) {
+			const targetLibraryFile = await Context.library.getTargetLibraryEpisodeFile(_episode)
+			const localTargetFile = path.resolve((`${targetLibraryFile.path}${targetLibraryFile.filename}`).replace(environment.MOUNT_LIBRARY_MEDIA_SERVER, environment.MOUNT_LIBRARY_ONEPACERR).replaceAll("\\", "/"))
+			if (existsSync(localTargetFile)) {
+				Logger.warn(`S${ma.arc}E${String(me.episode).padStart(2, '0')} not found in Plex but exists on filesystem; treating as present`)
+				file = localTargetFile
+			}
+		}
+
 		if (file) {
 			if (skipVerification) {
 				Logger.debug(

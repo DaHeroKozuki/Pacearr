@@ -107,6 +107,11 @@ export class LocalFolderController implements ILibraryController {
 		Logger.debug(`No need to scan Local Folder Library`)
 	}
 
+
+async waitForScanCompletion(): Promise<void> {
+return
+}
+
 	updateEpisodeMetadata(episode: EpisodeMetadata) {
 		Logger.debug(`updateEpisodeMetadata`)
 	}

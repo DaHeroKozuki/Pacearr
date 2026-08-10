@@ -16,6 +16,8 @@ export class LibraryConnectionError extends Error {
 export interface ILibraryController {
 	readonly libraryClient: LibraryClient
 
+	isHealthy?(): Promise<boolean>
+
 	init()
 
 	getLibraryFolder()
@@ -30,6 +32,8 @@ export interface ILibraryController {
 	): Promise<TargetLibraryFile> | TargetLibraryFile
 
 	scanLibrary(folder: string, arc: number)
+
+	waitForScanCompletion(): Promise<void>
 
 	updateEpisodeMetadata(episode: EpisodeMetadata)
 

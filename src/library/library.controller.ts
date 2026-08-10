@@ -22,7 +22,18 @@ import {
 } from './library.model.js'
 
 export class LibraryController {
+private mapMediaServerPath(filePath: string): string {
+return filePath
+.replace(
+environment.MOUNT_LIBRARY_MEDIA_SERVER,
+environment.MOUNT_LIBRARY_ONEPACERR,
+)
+.replaceAll('\\', '/')
+}
+
 	private client: ILibraryController
+
+	private scanLock: Promise<void> = Promise.resolve()
 
 	constructor() {
 		switch (environment.LIBRARY_MEDIA_SERVER as LibraryClient) {
@@ -71,10 +82,17 @@ export class LibraryController {
 		episode: EpisodeMetadata,
 		pathAccordingToMediaServer?: boolean,
 	): Promise<string> {
-		return await this.client.getExistingLibraryEpisodeFile(
+		const file = await this.client.getExistingLibraryEpisodeFile(
 			episode,
 			pathAccordingToMediaServer,
 		)
+
+		if (!file || pathAccordingToMediaServer) return file
+
+		// Stable build:
+		// Convert Media Server paths to the path visible inside OnePacerr.
+		// This is required when Plex runs on Windows but OnePacerr runs on Linux.
+		return this.mapMediaServerPath(file)
 	}
 
 	async getTargetLibraryEpisodeFile(
@@ -83,11 +101,26 @@ export class LibraryController {
 		return await this.client.getTargetLibraryEpisodeFile(episode)
 	}
 
+	async isHealthy(): Promise<boolean> {
+		if (!this.client.isHealthy) return true
+		return await this.client.isHealthy()
+	}
+
 	async scanLibrary(folder: string, arc: number) {
-		let libraryFolder = resolveSeriesRootFolder(await this.getLibraryFolder())
+		const previousScan = this.scanLock
+
+		let releaseScan: () => void = () => {}
+		this.scanLock = new Promise<void>(resolve => {
+			releaseScan = resolve
+		})
+
+		await previousScan
+
+		try {
+			let libraryFolder = resolveSeriesRootFolder(await this.getLibraryFolder())
 
 		mkdirSync(
-			`${path.resolve(`${libraryFolder.replace(environment.MOUNT_LIBRARY_MEDIA_SERVER, environment.MOUNT_LIBRARY_ONEPACERR)}`)}${path.sep}`,
+			`${path.resolve(`${this.mapMediaServerPath(libraryFolder)}`)}${path.sep}`,
 			{ recursive: true },
 		)
 
@@ -97,7 +130,7 @@ export class LibraryController {
 		) {
 			let plexmatch = `show: ${environment.LIBRARY_SERIES_NAME}`
 			writeFileSync(
-				`${path.resolve(`${libraryFolder.replace(environment.MOUNT_LIBRARY_MEDIA_SERVER, environment.MOUNT_LIBRARY_ONEPACERR)}`)}${path.sep}.plexmatch`,
+				`${path.resolve(`${this.mapMediaServerPath(libraryFolder)}`)}${path.sep}.plexmatch`,
 				plexmatch,
 			)
 		}
@@ -107,12 +140,21 @@ export class LibraryController {
 			!environment.PLEX_SKIP_METADATA_FILES
 		)
 			writeFileSync(
-				`${path.resolve(`${libraryFolder.replace(environment.MOUNT_LIBRARY_MEDIA_SERVER, environment.MOUNT_LIBRARY_ONEPACERR)}`)}${path.sep}tvshow.nfo`,
+				`${path.resolve(`${this.mapMediaServerPath(libraryFolder)}`)}${path.sep}tvshow.nfo`,
 				Context.metadata.getTVShowNFO(),
 			)
 
-		await this.client.scanLibrary(folder, arc)
+			await this.client.scanLibrary(folder, arc)
+		} finally {
+			releaseScan()
+		}
 	}
+
+	async waitForScanCompletion(): Promise<void> {
+		if (!this.client.waitForScanCompletion) return
+		await this.client.waitForScanCompletion()
+	}
+
 
 	async updateEpisodeMetadata(episode: EpisodeMetadata) {
 		if (
@@ -125,11 +167,11 @@ export class LibraryController {
 			)
 
 			mkdirSync(
-				`${path.resolve(`${folder.replace(environment.MOUNT_LIBRARY_MEDIA_SERVER, environment.MOUNT_LIBRARY_ONEPACERR)}`)}${path.sep}`,
+				`${path.resolve(`${this.mapMediaServerPath(folder)}`)}${path.sep}`,
 				{ recursive: true },
 			)
 			writeFileSync(
-				`${path.resolve(`${folder.replace(environment.MOUNT_LIBRARY_MEDIA_SERVER, environment.MOUNT_LIBRARY_ONEPACERR)}`)}${path.sep}${sanitizeWindowsFileName(
+				`${path.resolve(`${this.mapMediaServerPath(folder)}`)}${path.sep}${sanitizeWindowsFileName(
 					await LibraryController.resolveEpisodeTargetFileName(
 						episode.arc,
 						episode.episode,
@@ -151,18 +193,17 @@ export class LibraryController {
 		) {
 			let folder = resolveSeasonFolder(await this.getLibraryFolder(), arc)
 			let showFolder = path.resolve(
-				resolveSeriesRootFolder(await this.getLibraryFolder()).replace(
-					environment.MOUNT_LIBRARY_MEDIA_SERVER,
-					environment.MOUNT_LIBRARY_ONEPACERR,
+				this.mapMediaServerPath(
+					resolveSeriesRootFolder(await this.getLibraryFolder()),
 				),
 			)
 
 			mkdirSync(
-				`${path.resolve(`${folder.replace(environment.MOUNT_LIBRARY_MEDIA_SERVER, environment.MOUNT_LIBRARY_ONEPACERR)}`)}${path.sep}`,
+				`${path.resolve(`${this.mapMediaServerPath(folder)}`)}${path.sep}`,
 				{ recursive: true },
 			)
 			writeFileSync(
-				`${path.resolve(`${folder.replace(environment.MOUNT_LIBRARY_MEDIA_SERVER, environment.MOUNT_LIBRARY_ONEPACERR)}`)}${path.sep}season.nfo`,
+				`${path.resolve(`${this.mapMediaServerPath(folder)}`)}${path.sep}season.nfo`,
 				await Context.metadata.getSeasonNFO(arc),
 			)
 			if (!environment.PIPELINE_SKIP_POSTERS) {
@@ -175,7 +216,7 @@ export class LibraryController {
 				} else {
 					await safeCopyFileSync(
 						resolvePosterPath({ arc }),
-						`${path.resolve(`${folder.replace(environment.MOUNT_LIBRARY_MEDIA_SERVER, environment.MOUNT_LIBRARY_ONEPACERR)}`)}${path.sep}poster.png`,
+						`${path.resolve(`${this.mapMediaServerPath(folder)}`)}${path.sep}poster.png`,
 					)
 				}
 			}
@@ -191,9 +232,8 @@ export class LibraryController {
 		) {
 			if (!environment.PIPELINE_SKIP_POSTERS) {
 				let libraryFolder = path.resolve(
-					resolveSeriesRootFolder(await this.getLibraryFolder()).replace(
-						environment.MOUNT_LIBRARY_MEDIA_SERVER,
-						environment.MOUNT_LIBRARY_ONEPACERR,
+					this.mapMediaServerPath(
+						resolveSeriesRootFolder(await this.getLibraryFolder()),
 					),
 				)
 

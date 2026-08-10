@@ -180,6 +180,11 @@ export class EmbyController implements ILibraryController {
 		}
 	}
 
+
+async waitForScanCompletion(): Promise<void> {
+return
+}
+
 	async updateEpisodeMetadata(episode: EpisodeMetadata) {
 		//throw new Error('updateEpisodeMetadata')
 	}

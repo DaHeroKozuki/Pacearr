@@ -17,6 +17,6 @@ export function resolveSeasonFolder(
 ): string {
 	let folder = resolveSeriesRootFolder(libraryFolder)
 	folder += folder.includes('/') ? '/' : '\\'
-	folder += `Season ${String(arc).padStart(2, '0')}`
+	folder += arc === 0 ? 'Specials' : `Season ${String(arc).padStart(2, '0')}`
 	return folder
 }

@@ -1,4 +1,6 @@
 import axios from 'axios'
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
+import path from 'node:path'
 import { Logger } from 'ez-ts-logger'
 import { io, Socket } from 'socket.io-client'
 import { js2xml } from 'xml-js'
@@ -29,12 +31,94 @@ export class MetadataController {
 	private seasonNFOs = {}
 	private episodesNFOs = {}
 
+	// Stable6: validate Metadata before using or caching it
+	private validateMetadata(metadata: Metadata): boolean {
+		return !!(
+			metadata &&
+			typeof metadata === 'object' &&
+			metadata.lastUpdate &&
+			Array.isArray(metadata.arcs)
+		)
+	}
+
+	// Stable6: load last-known-good Metadata from disk
+	private loadMetadataCache(): Metadata | undefined {
+		if (!environment.METADATA_CACHE_ENABLED) return
+
+		try {
+			if (!existsSync(environment.METADATA_CACHE_FILE)) return
+
+			const cached = JSON.parse(
+				readFileSync(environment.METADATA_CACHE_FILE, 'utf8'),
+			) as Metadata
+
+			if (!this.validateMetadata(cached)) {
+				Logger.warn(`Cached Metadata is invalid; ignoring cache...`)
+				return
+			}
+
+			Logger.info(`Loaded last-known-good Metadata from local cache...`)
+			return cached
+		} catch (e) {
+			Logger.warn(`Unable to load local Metadata cache...`)
+			Logger.debug(e)
+			return
+		}
+	}
+
+	// Stable6: atomically save a validated Metadata snapshot
+	private saveMetadataCache(metadata: Metadata) {
+		if (!environment.METADATA_CACHE_ENABLED) return
+
+		try {
+			if (!this.validateMetadata(metadata)) {
+				Logger.warn(`Refusing to cache invalid Metadata...`)
+				return
+			}
+
+			const cacheDir = path.dirname(environment.METADATA_CACHE_FILE)
+			const tempFile = `${environment.METADATA_CACHE_FILE}.tmp`
+
+			mkdirSync(cacheDir, { recursive: true })
+			writeFileSync(tempFile, JSON.stringify(metadata, null, 2), 'utf8')
+			renameSync(tempFile, environment.METADATA_CACHE_FILE)
+
+			Logger.debug(`Metadata cache updated successfully...`)
+		} catch (e) {
+			Logger.warn(`Unable to update local Metadata cache...`)
+			Logger.debug(e)
+		}
+	}
+
+	// Stable6: online Metadata first, local cache as fallback
+	private async fetchMetadataWithCache(): Promise<Metadata> {
+		try {
+			const metadata = (
+				await axios.get(`${environment.METADATA_URL}/metadata`)
+			).data as Metadata
+
+			if (!this.validateMetadata(metadata)) {
+				throw new Error(`Metadata response failed validation`)
+			}
+
+			this.saveMetadataCache(metadata)
+			return metadata
+		} catch (e) {
+			Logger.warn(`Metadata server unavailable; attempting local cache...`)
+			Logger.debug(e)
+
+			const cached = this.loadMetadataCache()
+			if (cached) return cached
+
+			throw e
+		}
+	}
+
 	async refreshMetadata() {
 		Logger.info(`Refreshing Metadata...`)
 
 		try {
-			let metadata = (await axios.get(`${environment.METADATA_URL}/metadata`))
-				.data
+			let metadata = await this.fetchMetadataWithCache()
 
 			if (!this.metadata || metadata.lastUpdate > this.metadata.lastUpdate) {
 				Logger.info(`Newer Metadata found!`)
@@ -100,10 +184,10 @@ export class MetadataController {
 
 					this.socket.on('updates', async data => {
 						Logger.info(`Metadata updates received! Processing...`)
-						this.metadata = (
-							await axios.get(`${environment.METADATA_URL}/metadata`)
-						).data
+						this.metadata = await this.fetchMetadataWithCache()
+						this.newMetadata = true
 						await this.sendToPipeline(true)
+						this.newMetadata = false
 					})
 				}
 			}
