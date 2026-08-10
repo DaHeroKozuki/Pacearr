@@ -218,7 +218,7 @@ I listed every env variable for convenience. All default are commented out, exce
 ```yaml
 services:
   onepacerr:
-    image: ghcr.io/DaHeroKozuki/OnePacerr-beta:v1.7.19-beta
+    image: ghcr.io/daherokozuki/onepacerr-beta:v1.7.19-beta
     container_name: onepacerr
     restart: unless-stopped
     environment:
