@@ -1,10 +1,10 @@
 # ![OnePacerr](docs/logo.png)
 
-[![GitHub Packages](https://img.shields.io/badge/ghcr.io-eltharynd%2Fonepacerr-blue?style=flat-square&logo=github)](https://github.com/eltharynd/OnePacerr/pkgs/container/onepacerr)
-[![GitHub Release](https://img.shields.io/github/v/release/eltharynd/onepacerr?style=flat-square)](https://github.com/eltharynd/OnePacerr/releases)
-[![GitHub Issues](https://img.shields.io/github/issues/eltharynd/onepacerr?style=flat-square)](https://github.com/eltharynd/OnePacerr/issues)
-[![GitHub Last Commit](https://img.shields.io/github/last-commit/eltharynd/onepacerr?style=flat-square)](https://github.com/eltharynd/OnePacerr/commits/main/)
-[![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](https://github.com/eltharynd/OnePacerr?tab=MIT-1-ov-file)
+[![GitHub Packages](https://img.shields.io/badge/ghcr.io-DaHeroKozuki%2FOnePacerr--beta-blue?style=flat-square&logo=github)](https://github.com/DaHeroKozuki/OnePacerr-beta/pkgs/container/onepacerr-beta)
+[![GitHub Release](https://img.shields.io/github/v/release/DaHeroKozuki/OnePacerr-beta?style=flat-square)](https://github.com/DaHeroKozuki/OnePacerr-beta/releases)
+[![GitHub Issues](https://img.shields.io/github/issues/DaHeroKozuki/OnePacerr-beta?style=flat-square)](https://github.com/DaHeroKozuki/OnePacerr-beta/issues)
+[![GitHub Last Commit](https://img.shields.io/github/last-commit/DaHeroKozuki/OnePacerr-beta?style=flat-square)](https://github.com/DaHeroKozuki/OnePacerr-beta/commits/main/)
+[![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](https://github.com/DaHeroKozuki/OnePacerr-beta?tab=MIT-1-ov-file)
 
 ## Automated One Pace downloads and metadata for Plex, Jellyfin, and Emby
 
@@ -22,6 +22,20 @@ It supports the most popular torrenting clients (qBittorrent, deluge, µTorrent 
 Also check [One Pace public API](https://github.com/eltharynd/one-pace-api).
 
 Not affiliated with One Pace's team.
+
+## 🚀 OnePacerr Beta Fork
+
+This repository is a beta fork of the original [OnePacerr](https://github.com/eltharynd/OnePacerr) project by [eltharynd](https://github.com/eltharynd). It preserves the original OnePacerr configuration structure and supported platforms while adding stability, recovery, and mixed Linux/Windows compatibility improvements.
+
+The main testing environment for this beta release is:
+
+- Plex Media Server
+- Deluge torrent client
+- OnePacerr running in Docker/Linux
+- Plex Media Server running on Windows
+
+The original project continues to support Plex, Jellyfin, Emby, Local Folder libraries and the supported torrent clients documented below. The beta-specific changes are additions on top of that original functionality.
+
 
 ### Supported Torrenting Clients
 
@@ -44,6 +58,8 @@ Not affiliated with One Pace's team.
 
 ## 📃 Table of Contents
 
+- 🚀 [OnePacerr Beta Fork](#-onepacerr-beta-fork)
+- 🧪 [Beta Improvements](#-beta-improvements)
 - ✨ [Features](#-features)
 - 🚀 [Getting Started](#-getting-started)
   - 🧳 [Prerequisites](#-prerequisites)
@@ -56,6 +72,7 @@ Not affiliated with One Pace's team.
   - 👩‍💻 [Contributing to the development](#-contributing-to-the-development)
 
 - ⚙️ [Environment Variables Explained](#️-environment-variables-explained)
+  - 🧪 [Beta Fork](#-beta-fork)
   - 🧪 [Pipeline](#-pipeline)
   - 🔎 [Filters](#-filters)
   - 🎬 [Library (common)](#-library-common)
@@ -65,14 +82,60 @@ Not affiliated with One Pace's team.
     - ✳️ [Library (Emby)](#️-library-emby)
     - 💾 [Torrent](#-torrent)
     - 💿 [Mount Path Mappings](#-mount-path-mappings)
+      - 🪟 [Windows Plex Compatibility](#-windows-plex-compatibility)
     - ℹ️ [Metadata](#ℹ️-metadata)
 - 🖼️ [Poster Sets](#️-poster-sets)
   - 🔍 [Previews](#-previews)
   - 📥 [Adding/Updating Sets](#-addingupdating-sets)
 - 🧪 [Pipeline Diagram](#-pipeline-diagram)
 - 📅 [Roadmap](#-roadmap)
+- 🔧 [OnePacerr Beta Fork Credits](#-onepacerr-beta-fork-credits)
 - 🤝 [Credits & Acknowledgements](#-credits--acknowledgements)
 - 💗 [Support (One Pace, not me!)](#-support-one-pace-not-me)
+
+## 🧪 Beta Improvements
+
+### Windows Plex Path Mapping Fix
+Allows Docker/Linux OnePacerr to communicate correctly with Windows Plex library paths.
+
+### Plex Import Path Conversion
+Converts Plex paths into Docker-compatible paths during processing.
+
+### Plex API Retry System
+Retries temporary Plex API failures instead of immediately failing the operation.
+
+### Plex Library Refresh Protection
+Adds retry handling around Plex library refresh requests.
+
+### Plex WebSocket Reconnect System
+Reconnects Plex event monitoring after WebSocket disconnects.
+
+### Plex WebSocket Crash Protection
+Prevents unexpected Plex WebSocket failures from stopping the container.
+
+### Plex Batch Processing
+Groups pending imports together to reduce repeated Plex API operations.
+
+### Single Plex Refresh Per Batch
+Refreshes Plex once for a group of imported episodes instead of refreshing after every episode.
+
+### Plex Scan Completion Waiting
+Waits for Plex scanning/indexing to complete before continuing with confirmation and metadata processing.
+
+### Configurable Plex Scan Window
+Adds adjustable minimum scan wait, scan timeout, and scan verification controls.
+
+### Persistent State Database
+Stores processing state so interrupted work can be recovered after container restarts.
+
+### Quarantine System
+Allows problematic files to be isolated instead of blocking normal processing.
+
+### Low Disk Space Protection
+Prevents processing when available storage falls below the configured minimum.
+
+### Pipeline Error Protection
+Adds safeguards around missing Plex paths and temporary Plex/filesystem states so they do not unnecessarily stop the container.
 
 ## ✨ Features
 
@@ -155,7 +218,7 @@ I listed every env variable for convenience. All default are commented out, exce
 ```yaml
 services:
   onepacerr:
-    image: ghcr.io/eltharynd/onepacerr:latest
+    image: ghcr.io/DaHeroKozuki/OnePacerr-beta:v1.7.19-beta
     container_name: onepacerr
     restart: unless-stopped
     environment:
@@ -250,6 +313,28 @@ services:
 
 
 
+      # OnePacerr Beta Fork Additions
+      # Persistent processing state
+      - STATE_ENABLED=true
+      - STATE_DB=/data/state/onepacerr.db
+
+      # Quarantine problematic files
+      - QUARANTINE_ENABLED=true
+      - QUARANTINE_DIR=/data/quarantine
+
+      # Minimum free disk space required before processing
+      - MIN_FREE_SPACE_GB=20
+
+      # Plex batch processing
+      - PLEX_BATCH_SIZE=20
+      - PLEX_BATCH_DELAY_SECONDS=30
+
+      # Plex scan completion controls
+      - PLEX_SCAN_MIN_WAIT_SECONDS=30
+      - PLEX_SCAN_TIMEOUT_SECONDS=600
+      - PLEX_SCAN_VERIFY=true
+
+
       # Metadata Settings
       #- METADATA_URL=https://onepacerr.com/api/v1
       #- METADATA_LANGUAGE=en
@@ -259,6 +344,8 @@ services:
     volumes:
       - /mnt/Library/Series:/mnt/Library/Series
       - /mnt/Applications/Downloads:/mnt/Applications/Downloads
+      - ./state:/data/state
+      - ./quarantine:/data/quarantine
 ```
 
 ### 🟢 Running locally
@@ -309,6 +396,16 @@ Here is a breakdown of key optional variables you can adjust in your
 | :--- | :--- | :--- |
 | `LOG_LEVEL` | `info` | Can be `critical`, `error`, `warning`, `info`, `debug`. |
 | `LOG_OUTPUT` | `text` | Can be set to `json` if you need to scrape your logs with Loki/Promtail for Grafana. |
+
+### 🧪 Beta Fork
+
+| Beta Fork Variables | Default | Description |
+| :--- | :--- | :--- |
+| `STATE_ENABLED` | `true` | Enables persistent processing state tracking. |
+| `STATE_DB` | `/data/state/onepacerr.db` | Location of the persistent state database. |
+| `QUARANTINE_ENABLED` | `true` | Enables quarantine handling for problematic files. |
+| `QUARANTINE_DIR` | `/data/quarantine` | Folder used for quarantined files. |
+| `MIN_FREE_SPACE_GB` | `20` | Minimum free storage required before new file processing continues. |
 
 ### 🧪 Pipeline
 
@@ -410,6 +507,11 @@ In order for an episode to be Monitored (processed/downloaded/updated/etc), it h
 | 🍤 `PLEX_LIBRARY_NAME` | `TV Shows` | Name of the Library in Plex. |
 | `PLEX_SKIP_METADATA_FILES` | `true` | If `false`, will generate `.nfo` and poster pngs even when Media Server is Plex. |
 | `PLEX_PLEXMATCH_EVEN_IF_NOT` | `false` | If `true`, will generate `.plexmatch` file even when using a different Media Sever. |
+| `PLEX_BATCH_SIZE` | `20` | Maximum number of pending imported episodes handled together in a Plex processing batch. |
+| `PLEX_BATCH_DELAY_SECONDS` | `30` | Delay used before processing a Plex import batch. |
+| `PLEX_SCAN_MIN_WAIT_SECONDS` | `30` | Minimum wait before Plex scan completion monitoring continues. |
+| `PLEX_SCAN_TIMEOUT_SECONDS` | `600` | Maximum time to wait for Plex scan completion before safely continuing. |
+| `PLEX_SCAN_VERIFY` | `true` | Enables Plex scan/episode confirmation handling for imported episodes. |
 
 **Note** on `PLEX_SKIP_METADATA_FILES`: Metadata for plex is set via API because doing so with just the files is unreliable at best. For this reason, when `LIBRARY_MEDIA_SERVER` is set to `plex`, by default (`PLEX_SKIP_METADATA_FILES=true`) OnePacerr will not generate the `.nfo` and the various `poster.png` on the Media Server folder.
 
@@ -466,6 +568,32 @@ If you set `PLEX_SKIP_METADATA_FILES=false`, you can instead generate those file
 
 If you're not sure what Mount Path Mappings are you can have a read on [TRaSH Guides](https://trash-guides.info/Radarr/Tips/Radarr-remote-path-mapping/).
 
+### 🪟 Windows Plex Compatibility
+
+This fork includes additional path handling for environments where OnePacerr runs in a Linux Docker container while Plex Media Server runs on Windows.
+
+For example, Plex may report the library as:
+
+```text
+M:\Anime
+```
+
+while the same library is available to OnePacerr as:
+
+```text
+/volume1/Media/Anime
+```
+
+Configure the mapping with:
+
+```dotenv
+MOUNT_LIBRARY_MEDIA_SERVER=M:\Anime
+MOUNT_LIBRARY_ONEPACERR=/volume1/Media/Anime
+```
+
+`MOUNT_LIBRARY_MEDIA_SERVER` should match the path reported by Plex. `MOUNT_LIBRARY_ONEPACERR` should match the path visible from the OnePacerr container.
+
+
 ---
 
 ### ℹ️ Metadata
@@ -514,6 +642,12 @@ The following diagram synthesizes the pipeline:
 - [ ] **Support Libraries with multiple folders** (currently only gets the first result from API)
 
 - [Request a new feature](https://github.com/eltharynd/OnePacerr/issues)
+
+## 🔧 OnePacerr Beta Fork Credits
+
+This fork is maintained by [DaHeroKozuki](https://github.com/DaHeroKozuki) and is built upon the original [OnePacerr](https://github.com/eltharynd/OnePacerr) project created by [eltharynd](https://github.com/eltharynd).
+
+The original project structure, supported clients, supported media servers, documentation, artwork acknowledgements, and upstream project credits remain credited to their original authors and contributors.
 
 ## 🤝 Credits & Acknowledgements
 
