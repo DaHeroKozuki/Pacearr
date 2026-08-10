@@ -10,6 +10,9 @@ RUN npm prune --omit=dev
 
 
 FROM node:lts-alpine AS runner
+LABEL org.opencontainers.image.source="https://github.com/DaHeroKozuki/OnePacerr-beta"
+LABEL org.opencontainers.image.description="OnePacerr beta fork with Plex stability improvements, Docker compatibility fixes, and Linux/Windows path handling."
+LABEL org.opencontainers.image.version="v1.7.19-beta"
 
 WORKDIR /app
 COPY package.json ./
