@@ -24,35 +24,90 @@ export class PlexController implements ILibraryController {
 	private section: ShowSection
 	private show: Show
 
+	private plexCircuitFailures = 0
+	private plexCircuitOpenUntil = 0
+
 	private async plexRetry<T>(
 		operation: () => Promise<T>,
 		name: string,
 	): Promise<T> {
+		const now = Date.now()
+
+		if (this.plexCircuitOpenUntil > now) {
+			const remainingSeconds = Math.ceil(
+				(this.plexCircuitOpenUntil - now) / 1000,
+			)
+
+			Logger.warn(
+				`Plex circuit breaker is open. Skipping '${name}' for another ${remainingSeconds}s.`,
+			)
+
+			throw new Error(
+				`Plex circuit breaker open for ${remainingSeconds}s`,
+			)
+		}
+
+		if (this.plexCircuitOpenUntil > 0) {
+			Logger.info(
+				`Plex circuit breaker cooldown expired. Testing Plex connection...`,
+			)
+			this.plexCircuitOpenUntil = 0
+		}
+
 		let attempts = 3
 		let delay = 5000
+		let lastError: unknown
 
 		while (attempts > 0) {
 			try {
-				return await operation()
+				const result = await operation()
+
+				if (this.plexCircuitFailures > 0) {
+					Logger.info(
+						`Plex recovered. Resetting circuit breaker failure count.`,
+					)
+				}
+
+				this.plexCircuitFailures = 0
+				return result
 			} catch (e) {
+				lastError = e
 				attempts--
 
 				Logger.warn(
 					`Plex ${name} failed. Attempts remaining: ${attempts}`,
 				)
 
-				if (attempts === 0) {
-					throw e
+				if (attempts > 0) {
+					await new Promise<void>(resolve => {
+						setTimeout(resolve, delay)
+					})
+
+					delay = Math.min(delay * 2, 30000)
 				}
-
-				await new Promise<void>(resolve => {
-					setTimeout(resolve, delay)
-				})
-
-				delay = Math.min(delay * 2, 30000)
 			}
 		}
-		throw new Error(`Plex ${name} failed`)
+
+		this.plexCircuitFailures++
+
+		Logger.warn(
+			`Plex failure sequence ${this.plexCircuitFailures}/${environment.PLEX_CIRCUIT_BREAKER_FAILURES}`,
+		)
+
+		if (
+			this.plexCircuitFailures >=
+			environment.PLEX_CIRCUIT_BREAKER_FAILURES
+		) {
+			this.plexCircuitOpenUntil =
+				Date.now() +
+				environment.PLEX_CIRCUIT_BREAKER_COOLDOWN_SECONDS * 1000
+
+			Logger.warn(
+				`Plex circuit breaker opened for ${environment.PLEX_CIRCUIT_BREAKER_COOLDOWN_SECONDS} seconds.`,
+			)
+		}
+
+		throw lastError ?? new Error(`Plex ${name} failed`)
 	}
 
 
@@ -104,6 +159,13 @@ this.connectWebSocket()
 			throw new Error(`Plex misconfigured`)
 		}
 		this.server = new PlexServer(config.baseUrl, config.token)
+		this.server.timeout =
+			environment.PLEX_API_TIMEOUT_SECONDS * 1000
+
+		Logger.info(
+			`Plex API timeout set to ${environment.PLEX_API_TIMEOUT_SECONDS} seconds`,
+		)
+
 		this.connectWebSocket()
 	}
 
@@ -315,7 +377,7 @@ this.connectWebSocket()
 		// Refresh Plex show object after library changes
 		try {
 			await this.plexRetry(
-				() => this.fetchShow(),
+				() => this.fetchShow(true),
 				"show lookup",
 			)
 		} catch (e) {
@@ -343,20 +405,11 @@ this.connectWebSocket()
 
 		return new Promise<void>((resolve, reject) => {
 			let finished = false
-
-			const timeoutHandler = setTimeout(() => {
-				if (finished) return
-
-				finished = true
-
-				Logger.warn(
-					`Plex scan completion timeout reached; continuing safely`,
-				)
-
-				resolve()
-			}, timeout)
+			const socket = this.ws
 
 			const callback = async data => {
+				if (finished) return
+
 				try {
 					const event =
 						JSON.parse(data).NotificationContainer
@@ -374,9 +427,7 @@ this.connectWebSocket()
 							finished = true
 							clearTimeout(timeoutHandler)
 
-							if (this.ws) {
-								this.ws.off('message', callback)
-							}
+							socket?.off('message', callback)
 
 							Logger.info(
 								`Plex scan completed`,
@@ -388,13 +439,27 @@ this.connectWebSocket()
 				} catch {}
 			}
 
-			if (this.ws) {
-				this.ws.on('message', callback)
+			const timeoutHandler = setTimeout(() => {
+				if (finished) return
+
+				finished = true
+				socket?.off('message', callback)
+
+				Logger.warn(
+					`Plex scan completion timeout reached; continuing safely`,
+				)
+
+				resolve()
+			}, timeout)
+
+			if (socket) {
+				socket.on('message', callback)
 			} else {
 				Logger.warn(
 					`Plex WebSocket unavailable while waiting for scan`,
 				)
 				clearTimeout(timeoutHandler)
+				finished = true
 				resolve()
 			}
 		})
@@ -525,12 +590,20 @@ this.connectWebSocket()
 		)
 	}
 
-	private async fetchShow() {
+	private async fetchShow(force: boolean = false) {
+		if (this.show && !force) {
+			Logger.debug(
+				`Using cached Plex Show '${this.show.title}'`,
+			)
+			return this.show
+		}
+
 		Logger.info(`Searching for Plex Show...`)
 
 		let searchResults = await this.section.search({
 			title: environment.LIBRARY_SERIES_NAME,
 		})
+
 		if (searchResults.length < 1) {
 			if (!environment.LIBRARY_CREATE_SHOW_IF_NOT_FOUND) {
 				Logger.error(
@@ -549,6 +622,8 @@ this.connectWebSocket()
 			this.show = searchResults[0]
 			Logger.info(`Found Plex Show '${this.show.title}'...`)
 		}
+
+		return this.show
 	}
 }
 

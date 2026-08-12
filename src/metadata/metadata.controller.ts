@@ -154,16 +154,19 @@ export class MetadataController {
 
 					const timeout = setTimeout(() => {
 						if (!this.socket?.connected) {
-							Logger.error(`Socket connection could not be estabilished...`)
-							Logger.error(`Please check your Stack settings`)
-							Logger.error(
-								`If your environment doesn't allow for WebSockets, you can always turn METADATA_DISABLE_WEBSOCKET=true`,
+							Logger.warn(
+								`Metadata WebSocket connection could not be established. Falling back to polling and retrying later.`,
 							)
-							Logger.criticalAndThrow(
-								new SocketConnectionError(
-									`Socket connection could not be estabilished...`,
-								),
-							)
+
+							try {
+								this.socket?.disconnect()
+							} catch {}
+
+							this.socket = null
+
+							setTimeout(async () => {
+								await this.refreshMetadata()
+							}, environment.METADATA_CHECK_INTERVAL)
 						}
 					}, 10000)
 
@@ -180,6 +183,13 @@ export class MetadataController {
 
 					this.socket.on('disconnect', () => {
 						Logger.debug(`Disconnected from server`)
+					})
+
+					this.socket.on('connect_error', err => {
+						Logger.warn(
+							`Metadata WebSocket connection error. Falling back to polling.`,
+						)
+						Logger.debug(err)
 					})
 
 					this.socket.on('updates', async data => {

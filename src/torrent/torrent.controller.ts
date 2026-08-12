@@ -39,6 +39,39 @@ export class TorrentController {
 		torrent: Torrent
 	}[] = []
 
+	// Beta 1.1: episodes confirmed by Plex but awaiting metadata
+	private pendingMetadata: {
+		episode: EpisodeMetadata
+		torrent: Torrent
+	}[] = []
+
+	private queuePendingMetadata(
+		episode: EpisodeMetadata,
+		torrent: Torrent,
+		lastError?: string,
+	) {
+		const exists = this.pendingMetadata.some(
+			item =>
+				item.torrent.hash === torrent.hash &&
+				item.episode.arc === episode.arc &&
+				item.episode.episode === episode.episode,
+		)
+
+		if (!exists) {
+			this.pendingMetadata.push({ episode, torrent })
+		}
+
+		stateStore.setEpisodeState(
+			episode.arc,
+			episode.episode,
+			'metadata_pending',
+			{
+				torrentHash: torrent.hash,
+				lastError,
+			},
+		)
+	}
+
 	private queuePendingPlex(episode: EpisodeMetadata, torrent: Torrent) {
 		const exists = this.pendingPlex.some(
 			item =>
@@ -112,7 +145,8 @@ const recoverable = [
 ...stateStore.getByState('metadata_pending'),
 ]
 
-let restored = 0
+let restoredPlex = 0
+let restoredMetadata = 0
 
 for (const stored of recoverable) {
 if (!stored.torrentHash) continue
@@ -134,8 +168,17 @@ stored.arc,
 stored.episode,
 )
 
+if (stored.state === 'metadata_pending') {
+this.queuePendingMetadata(
+episode,
+torrent,
+stored.lastError,
+)
+restoredMetadata++
+} else {
 this.queuePendingPlex(episode, torrent)
-restored++
+restoredPlex++
+}
 } catch (e) {
 Logger.warn(
 `Could not restore S${stored.arc}E${String(stored.episode).padStart(2, '0')} from persistent state`,
@@ -145,7 +188,7 @@ Logger.debug(e)
 }
 
 Logger.info(
-`Persistent state recovery restored ${restored} Plex-pending episode(s)...`,
+`Persistent state recovery restored ${restoredPlex} Plex-pending and ${restoredMetadata} metadata-pending episode(s)...`,
 )
 } catch (e) {
 Logger.warn(`Persistent state recovery could not query torrent client...`)
@@ -235,6 +278,7 @@ Logger.debug(e)
 			this.__watching = true
 
 			await this.restorePersistentState()
+			await this.processPendingMetadataQueue()
 			await this.restoreCleanupPending()
 			await this.monitorLoop()
 		}
@@ -341,6 +385,7 @@ Logger.debug(e)
 
 			// Stable build: one Plex scan after all imports in this cycle.
 			await this.processPendingPlexQueue()
+			await this.processPendingMetadataQueue()
 		} catch (e) {
 			if (e instanceof MetadataAbsentError) {
 				Logger.warn(
@@ -357,17 +402,114 @@ Logger.debug(e)
 		}
 	}
 
+	private async processPendingMetadataQueue() {
+		if (this.pendingMetadata.length < 1) return
+
+		Logger.info(``)
+		Logger.info(`##################################`)
+		Logger.info(`METADATA RETRY QUEUE PROCESSING`)
+		Logger.info(`Pending: ${this.pendingMetadata.length} episode(s)`)
+		Logger.info(`##################################`)
+
+		if (!(await Context.library.isHealthy())) {
+			Logger.warn(
+				`Plex is currently unavailable; deferring ${this.pendingMetadata.length} metadata update(s)...`,
+			)
+			return
+		}
+
+		const pending = this.pendingMetadata.splice(0)
+		const succeeded: typeof pending = []
+		const failed: typeof pending = []
+
+		for (const item of pending) {
+			try {
+				await Context.library.updateEpisodeMetadata(item.episode)
+
+				stateStore.setEpisodeState(
+					item.episode.arc,
+					item.episode.episode,
+					'cleanup_pending',
+					{ torrentHash: item.torrent.hash },
+				)
+
+				Logger.info(
+					`Metadata retry succeeded for S${item.episode.arc}E${String(item.episode.episode).padStart(2, '0')}`,
+				)
+
+				succeeded.push(item)
+			} catch (e) {
+				const message =
+					e instanceof Error ? e.message : String(e)
+
+				Logger.warn(
+					`Metadata retry deferred for S${item.episode.arc}E${String(item.episode.episode).padStart(2, '0')}`,
+				)
+				Logger.debug(e)
+
+				this.queuePendingMetadata(
+					item.episode,
+					item.torrent,
+					message,
+				)
+
+				failed.push(item)
+			}
+		}
+
+		const arcs = [
+			...new Set(
+				succeeded.map(item => item.episode.arc),
+			),
+		]
+
+		for (const arc of arcs) {
+			try {
+				await Context.library.updateSeasonMetadata(arc)
+			} catch (e) {
+				Logger.warn(
+					`Season ${arc} metadata/poster retry failed; episode metadata remains valid`,
+				)
+				Logger.debug(e)
+			}
+		}
+
+		if (succeeded.length > 0) {
+			try {
+				await Context.library.updateShowMetadata()
+			} catch (e) {
+				Logger.warn(
+					`Show metadata/poster retry failed; episode metadata remains valid`,
+				)
+				Logger.debug(e)
+			}
+		}
+
+		Logger.info(``)
+		Logger.info(`##################################`)
+		Logger.info(`METADATA RETRY QUEUE COMPLETE`)
+		Logger.info(`Succeeded: ${succeeded.length}`)
+		Logger.info(`Deferred: ${failed.length}`)
+		Logger.info(`Remaining queue: ${this.pendingMetadata.length}`)
+		Logger.info(`##################################`)
+		Logger.info(``)
+	}
+
 	private async processPendingPlexQueue() {
 		if (this.pendingPlex.length < 1) return
 
 		let batchNumber = 0
 
-		while (this.pendingPlex.length > 0) {
+		// Beta 1.1: process a snapshot of the current queue.
+		// Failed items are deferred into this.pendingPlex for the next monitor cycle.
+		const currentQueue = this.pendingPlex.splice(0)
+
+		while (currentQueue.length > 0) {
 			batchNumber++
 
-			const totalRemaining = this.pendingPlex.length
+			const totalRemaining = currentQueue.length
 
-			const pending = this.pendingPlex.splice(
+			const pending = currentQueue.splice(
 				0,
 				environment.PLEX_BATCH_SIZE,
 			)
@@ -419,8 +561,10 @@ Logger.debug(e)
 		const failed: typeof pending = []
 
 		for (const item of pending) {
+			let plexFile: string
+
 			try {
-				const plexFile =
+				plexFile =
 					await Context.library.getExistingLibraryEpisodeFile(
 						item.episode,
 						true,
@@ -431,14 +575,27 @@ Logger.debug(e)
 						`Plex does not yet report S${item.episode.arc}E${String(item.episode.episode).padStart(2, '0')}`,
 					)
 				}
+			} catch (e) {
+				Logger.warn(
+					`Plex confirmation deferred for S${item.episode.arc}E${String(item.episode.episode).padStart(2, '0')}`,
+				)
+				Logger.debug(e)
 
-				stateStore.setEpisodeState(
-					item.episode.arc,
-					item.episode.episode,
-					'metadata_pending',
-					{ torrentHash: item.torrent.hash },
+				this.queuePendingPlex(
+					item.episode,
+					item.torrent,
 				)
 
+				failed.push(item)
+				continue
+			}
+
+			this.queuePendingMetadata(
+				item.episode,
+				item.torrent,
+			)
+
+			try {
 				await Context.library.updateEpisodeMetadata(item.episode)
 
 				stateStore.setEpisodeState(
@@ -455,18 +612,16 @@ Logger.debug(e)
 				confirmed.push(item)
 			} catch (e) {
 				Logger.warn(
-					`Plex confirmation/metadata deferred for S${item.episode.arc}E${String(item.episode.episode).padStart(2, '0')}`,
+					`Metadata deferred for S${item.episode.arc}E${String(item.episode.episode).padStart(2, '0')}`,
 				)
 				Logger.debug(e)
-				stateStore.setEpisodeState(
-					item.episode.arc,
-					item.episode.episode,
-					'plex_pending',
-					{
-						torrentHash: item.torrent.hash,
-						lastError: e instanceof Error ? e.message : String(e),
-					},
+
+				this.queuePendingMetadata(
+					item.episode,
+					item.torrent,
+					e instanceof Error ? e.message : String(e),
 				)
+
 				failed.push(item)
 			}
 		}
@@ -569,22 +724,19 @@ Logger.debug(e)
 			}
 		}
 
-		// Retry only Plex/metadata failures next cycle.
-		for (const item of failed)
-			this.queuePendingPlex(item.episode, item.torrent)
-
 		Logger.info(``)
 		Logger.info(`##################################`)
 		Logger.info(`PLEX BATCH COMPLETE`)
 		Logger.info(`Batch: ${batchNumber}`)
 		Logger.info(`Confirmed: ${confirmed.length}`)
-		Logger.info(`Remaining queue: ${this.pendingPlex.length}`)
+		Logger.info(`Remaining this cycle: ${currentQueue.length}`)
+		Logger.info(`Deferred to next cycle: ${this.pendingPlex.length}`)
 		Logger.info(`##################################`)
 		Logger.info(``)
 
-	if (this.pendingPlex.length > 0) {
+	if (currentQueue.length > 0) {
 		Logger.info(
-			`Waiting ${environment.PLEX_BATCH_DELAY_SECONDS}s before next Plex batch...`,
+			`Waiting ${environment.PLEX_BATCH_DELAY_SECONDS}s before next Plex batch in this cycle...`,
 		)
 
 		await new Promise<void>(resolve => {
@@ -600,8 +752,8 @@ Logger.debug(e)
 	Logger.info(``)
 	Logger.info(`##################################`)
 
-	Logger.info(`PLEX QUEUE COMPLETE`)
-	Logger.info(`All pending episodes processed`)
+	Logger.info(`PLEX QUEUE CYCLE COMPLETE`)
+	Logger.info(`Deferred to next cycle: ${this.pendingPlex.length} episode(s)`)
 	Logger.info(`##################################`)
 	Logger.info(``)
 

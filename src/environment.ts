@@ -214,6 +214,19 @@ export default {
 
 	PLEX_SCAN_VERIFY:
 		(process.env.PLEX_SCAN_VERIFY || 'true').toLowerCase() === 'true',
+
+	// Beta 1.1: Plex API request timeout
+	PLEX_API_TIMEOUT_SECONDS:
+		Number.parseInt(process.env.PLEX_API_TIMEOUT_SECONDS || '120'),
+
+	// Beta 1.1: Plex circuit breaker
+	PLEX_CIRCUIT_BREAKER_FAILURES:
+		Number.parseInt(process.env.PLEX_CIRCUIT_BREAKER_FAILURES || '3'),
+
+	PLEX_CIRCUIT_BREAKER_COOLDOWN_SECONDS:
+		Number.parseInt(
+			process.env.PLEX_CIRCUIT_BREAKER_COOLDOWN_SECONDS || '300',
+		),
 	METADATA_LANGUAGE: process.env.METADATA_LANGUAGE || 'en',
 	METADATA_POSTER_SET: process.env.METADATA_POSTER_SET || 'default',
 	METADATA_DISABLE_WEBSOCKET: /true/i.test(
