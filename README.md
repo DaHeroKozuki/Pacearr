@@ -104,14 +104,27 @@ Converts Plex paths into Docker-compatible paths during processing.
 ### Plex API Retry System
 Retries temporary Plex API failures instead of immediately failing the operation.
 
+### Configurable Plex API Timeout
+Adds a configurable timeout for Plex API requests, allowing slower or busy Plex servers more time to respond.
+
+Default: `PLEX_API_TIMEOUT_SECONDS=120`
+
+### Plex Circuit Breaker
+Temporarily pauses Plex API operations after repeated failures instead of continuously sending requests to an unavailable or overloaded Plex server. Requests resume after the configured cooldown period.
+
+Defaults: `PLEX_CIRCUIT_BREAKER_FAILURES=3` and `PLEX_CIRCUIT_BREAKER_COOLDOWN_SECONDS=300`.
+
 ### Plex Library Refresh Protection
-Adds retry handling around Plex library refresh requests.
+Adds retry handling around Plex library refresh requests and prevents refresh timeouts from unnecessarily stopping the container.
 
 ### Plex WebSocket Reconnect System
-Reconnects Plex event monitoring after WebSocket disconnects.
+Improves Plex event monitoring reliability by reconnecting after WebSocket disconnects.
 
 ### Plex WebSocket Crash Protection
 Prevents unexpected Plex WebSocket failures from stopping the container.
+
+### Plex Scan Listener Cleanup
+Removes stale Plex scan WebSocket listeners after scan completion or timeout, preventing old callbacks from firing later.
 
 ### Plex Batch Processing
 Groups pending imports together to reduce repeated Plex API operations.
@@ -119,14 +132,26 @@ Groups pending imports together to reduce repeated Plex API operations.
 ### Single Plex Refresh Per Batch
 Refreshes Plex once for a group of imported episodes instead of refreshing after every episode.
 
+### Plex Queue Next-Cycle Backoff
+Defers episodes that Plex cannot yet confirm until the next normal monitoring cycle instead of immediately returning them to the same Plex batch loop. This prevents repeated processing loops against unresolved episodes.
+
 ### Plex Scan Completion Waiting
-Waits for Plex scanning/indexing to complete before continuing with confirmation and metadata processing.
+Waits for Plex scanning/indexing to complete, or for the configured timeout to be reached, before continuing safely with confirmation and metadata processing.
 
 ### Configurable Plex Scan Window
 Adds adjustable minimum scan wait, scan timeout, and scan verification controls.
 
+### Plex Show Caching
+Caches the discovered Plex show during normal processing to reduce repeated full-library searches. The cache is refreshed when required after library changes.
+
 ### Persistent State Database
 Stores processing state so interrupted work can be recovered after container restarts.
+
+### Persistent Metadata Retry Queue
+Separates episodes that Plex has already confirmed but whose metadata update failed. These episodes remain in `metadata_pending` state and can retry metadata processing without unnecessarily repeating the Plex import and confirmation workflow. Pending work is stored in the persistent state database and survives container restarts.
+
+### Metadata WebSocket Recovery
+Prevents metadata WebSocket connection failures from terminating the container. Failed connections fall back safely and retry later.
 
 ### Quarantine System
 Allows problematic files to be isolated instead of blocking normal processing.
@@ -218,7 +243,7 @@ I listed every env variable for convenience. All default are commented out, exce
 ```yaml
 services:
   onepacerr:
-    image: ghcr.io/daherokozuki/onepacerr-beta:v1.7.19-beta
+    image: ghcr.io/daherokozuki/onepacerr-beta:v1.7.19-beta1.1
     container_name: onepacerr
     restart: unless-stopped
     environment:
@@ -276,6 +301,11 @@ services:
       - PLEX_LIBRARY_NAME=TV 
       #- PLEX_SKIP_METADATA_FILES=true 
       #- PLEX_PLEXMATCH_EVEN_IF_NOT=false 
+
+      # Beta 1.1 - Plex API resilience
+      - PLEX_API_TIMEOUT_SECONDS=120
+      - PLEX_CIRCUIT_BREAKER_FAILURES=3
+      - PLEX_CIRCUIT_BREAKER_COOLDOWN_SECONDS=300
       
       # Library - Jellyfin
       - JELLYFIN_URL=http://localhost:8096
@@ -507,6 +537,9 @@ In order for an episode to be Monitored (processed/downloaded/updated/etc), it h
 | 🍤 `PLEX_LIBRARY_NAME` | `TV Shows` | Name of the Library in Plex. |
 | `PLEX_SKIP_METADATA_FILES` | `true` | If `false`, will generate `.nfo` and poster pngs even when Media Server is Plex. |
 | `PLEX_PLEXMATCH_EVEN_IF_NOT` | `false` | If `true`, will generate `.plexmatch` file even when using a different Media Sever. |
+| `PLEX_API_TIMEOUT_SECONDS` | `120` | Maximum time in seconds to wait for an individual Plex API request. |
+| `PLEX_CIRCUIT_BREAKER_FAILURES` | `3` | Number of failed Plex operation sequences before the circuit breaker opens. |
+| `PLEX_CIRCUIT_BREAKER_COOLDOWN_SECONDS` | `300` | Time in seconds Plex requests are paused after the circuit breaker opens. |
 | `PLEX_BATCH_SIZE` | `20` | Maximum number of pending imported episodes handled together in a Plex processing batch. |
 | `PLEX_BATCH_DELAY_SECONDS` | `30` | Delay used before processing a Plex import batch. |
 | `PLEX_SCAN_MIN_WAIT_SECONDS` | `30` | Minimum wait before Plex scan completion monitoring continues. |
