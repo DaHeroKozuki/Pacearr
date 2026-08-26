@@ -150,11 +150,17 @@ Stores processing state so interrupted work can be recovered after container res
 ### Persistent Metadata Retry Queue
 Separates episodes that Plex has already confirmed but whose metadata update failed. These episodes remain in `metadata_pending` state and can retry metadata processing without unnecessarily repeating the Plex import and confirmation workflow. Pending work is stored in the persistent state database and survives container restarts.
 
+### Persistent Retry and Backoff
+Plex confirmation, metadata processing, and quarantine recovery use the same configurable retry schedule. Retry state is stored in the persistent state database, so waiting work resumes with its existing attempt count and next retry time after a container restart instead of starting over. The default delays are 60 seconds, 300 seconds, and 900 seconds, with later retries capped at 3600 seconds.
+
 ### Metadata WebSocket Recovery
 Prevents metadata WebSocket connection failures from terminating the container. Failed connections fall back safely and retry later.
 
 ### Quarantine System
-Allows problematic files to be isolated instead of blocking normal processing.
+Allows problematic files to be isolated instead of blocking normal processing. Quarantined work remains recoverable and is retried with persistent backoff when the underlying file, storage, or media-server condition becomes healthy again.
+
+### Cleanup Recovery
+Records cleanup work that could not be completed immediately and safely retries it after transient filesystem, torrent-client, or container interruptions.
 
 ### Low Disk Space Protection
 Prevents processing when available storage falls below the configured minimum.
@@ -243,7 +249,7 @@ I listed every env variable for convenience. All default are commented out, exce
 ```yaml
 services:
   onepacerr:
-    image: ghcr.io/daherokozuki/onepacerr-beta:v1.7.19-beta1.1
+    image: ghcr.io/daherokozuki/onepacerr-beta:v1.7.19-beta1.2
     container_name: onepacerr
     restart: unless-stopped
     environment:
@@ -302,7 +308,7 @@ services:
       #- PLEX_SKIP_METADATA_FILES=true 
       #- PLEX_PLEXMATCH_EVEN_IF_NOT=false 
 
-      # Beta 1.1 - Plex API resilience
+      # Beta 1.2 - Plex API resilience
       - PLEX_API_TIMEOUT_SECONDS=120
       - PLEX_CIRCUIT_BREAKER_FAILURES=3
       - PLEX_CIRCUIT_BREAKER_COOLDOWN_SECONDS=300
@@ -332,6 +338,10 @@ services:
       - TORRENT_CATEGORY=onepacerr
       - TORRENT_CATEGORY_ONCE_COMPLETED=completed
       - TORRENT_CHECK_INTERVAL=60
+      # Keep completed torrents and their data by default.
+      # For Deluge, set true only if OnePacerr should remove the torrent and
+      # downloaded data after Plex confirms every imported episode.
+      - TORRENT_DELETE_ON_COMPLETION=false
 
 
 
@@ -354,6 +364,12 @@ services:
 
       # Minimum free disk space required before processing
       - MIN_FREE_SPACE_GB=20
+
+      # Shared persistent retry/backoff schedule
+      - RETRY_BACKOFF_1_SECONDS=60
+      - RETRY_BACKOFF_2_SECONDS=300
+      - RETRY_BACKOFF_3_SECONDS=900
+      - RETRY_BACKOFF_MAX_SECONDS=3600
 
       # Plex batch processing
       - PLEX_BATCH_SIZE=20
@@ -436,6 +452,12 @@ Here is a breakdown of key optional variables you can adjust in your
 | `QUARANTINE_ENABLED` | `true` | Enables quarantine handling for problematic files. |
 | `QUARANTINE_DIR` | `/data/quarantine` | Folder used for quarantined files. |
 | `MIN_FREE_SPACE_GB` | `20` | Minimum free storage required before new file processing continues. |
+| `RETRY_BACKOFF_1_SECONDS` | `60` | Delay before the first persistent retry for Plex confirmation, metadata processing, and quarantine recovery. |
+| `RETRY_BACKOFF_2_SECONDS` | `300` | Delay before the second persistent retry. |
+| `RETRY_BACKOFF_3_SECONDS` | `900` | Delay before the third persistent retry. |
+| `RETRY_BACKOFF_MAX_SECONDS` | `3600` | Maximum delay between later persistent retries. |
+
+With `STATE_ENABLED=true`, retry attempts and next-attempt times survive container restarts. This applies to Plex confirmation, metadata processing, quarantine recovery, and recoverable cleanup work. Keep `/data/state` on a persistent volume, as shown in the Compose example. The quarantine directory should also be mounted persistently so isolated files remain available for recovery.
 
 ### 🧪 Pipeline
 
@@ -587,6 +609,7 @@ If you set `PLEX_SKIP_METADATA_FILES=false`, you can instead generate those file
 | `TORRENT_CATEGORY` | `onepacerr` | Creates downloads with this category, also filters completed torrents using this. |
 | `TORRENT_CATEGORY_ONCE_COMPLETED` | `completed` | After processing completed downloads, changes the torrent category to this one. |
 | `TORRENT_CHECK_INTERVAL` | 60 | Seconds between checking for completed downloads. |
+| `TORRENT_DELETE_ON_COMPLETION` | `false` | If `false`, a successfully imported torrent is retained and moved to `TORRENT_CATEGORY_ONCE_COMPLETED`. For Deluge, if `true`, OnePacerr removes the torrent and its downloaded data only after Plex confirms every imported episode. Other clients continue using the completed category. |
 
 ---
 
@@ -625,6 +648,13 @@ MOUNT_LIBRARY_ONEPACERR=/volume1/Media/Anime
 ```
 
 `MOUNT_LIBRARY_MEDIA_SERVER` should match the path reported by Plex. `MOUNT_LIBRARY_ONEPACERR` should match the path visible from the OnePacerr container.
+
+For Windows drive-letter paths, keep the drive and backslashes exactly as Plex reports them. In Docker Compose, use a plain scalar or single quotes so YAML does not interpret backslashes as escape sequences:
+
+```yaml
+- MOUNT_LIBRARY_MEDIA_SERVER='M:\Anime'
+- MOUNT_LIBRARY_ONEPACERR=/volume1/Media/Anime
+```
 
 
 ---
