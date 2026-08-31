@@ -29,12 +29,12 @@ export class DelugeController implements ITorrentController {
 			.getPlugins()
 			.then(({ result, error }) => {
 				if (error) throw error
-				if (!result.enabled_plugins.find(p => p == 'Label'))
+				if (!result.enabled_plugins.find((p) => p == 'Label'))
 					throw new LabelsDisabledInDelugeError(
 						`Deluge Label plugin is required for operations, but deluge reports it disabled`,
 					)
 			})
-			.catch(e => {
+			.catch((e) => {
 				Logger.errorAndThrow(e)
 			})
 	}
@@ -44,7 +44,7 @@ export class DelugeController implements ITorrentController {
 		category: string,
 	): Promise<boolean> {
 		let torrent = (await this.getAllTorrents()).find(
-			t => t.hash === torrentInfo.hash,
+			(t) => t.hash === torrentInfo.hash,
 		)
 		if (torrent) {
 			Logger.debug(`MagnetURI already in Deluge...`)
@@ -70,8 +70,8 @@ export class DelugeController implements ITorrentController {
 	public async getAllTorrents<T = Torrent>(category?: string): Promise<T[]> {
 		try {
 			return (await this.client.getAllData()).torrents
-				.filter(t => !category || t.label == category)
-				.map(t => {
+				.filter((t) => !category || t.label == category)
+				.map((t) => {
 					return {
 						hash: t.id,
 						content_path: `${t.savePath}${t.savePath.includes('/') ? '/' : '\\'}${t.name}`,
@@ -91,7 +91,7 @@ export class DelugeController implements ITorrentController {
 		category?: string,
 	): Promise<T[]> {
 		return (await this.getAllTorrents<Torrent>()).filter(
-			t => (!category || t.category == category) && t.progress >= 1,
+			(t) => (!category || t.category == category) && t.progress >= 1,
 		) as T[]
 	}
 
@@ -109,9 +109,22 @@ export class DelugeController implements ITorrentController {
 		)
 
 		if (error) {
-			throw new Error(
-				error?.message || String(error),
-			)
+			const message = error?.message || String(error)
+
+			// Beta 1.3: torrent removal is idempotent.
+			// If Deluge says the torrent is already absent,
+			// the requested cleanup has already been achieved.
+			if (
+				message.includes('InvalidTorrentError') &&
+				message.includes('not in session')
+			) {
+				Logger.warn(
+					`Torrent '${torrent.hash}' is already absent from Deluge; treating cleanup as successful...`,
+				)
+				return
+			}
+
+			throw new Error(message)
 		}
 	}
 

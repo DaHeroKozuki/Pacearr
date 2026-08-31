@@ -39,11 +39,17 @@ The original project continues to support Plex, Jellyfin, Emby, Local Folder lib
 
 ### Supported Torrenting Clients
 
-[![qBittorrent](docs/torrenting_clients/qbittorrent.png)](https://hub.docker.com/r/linuxserver/qbittorrent) [![Deluge](docs/torrenting_clients/deluge.png)](https://hub.docker.com/r/linuxserver/deluge) [![μTorrent](docs/torrenting_clients/utorrent.png)](https://www.utorrent.com/downloads) [![Transmission](docs/torrenting_clients/transmission.png)](https://hub.docker.com/r/linuxserver/transmission)
+[![qBittorrent](docs/torrenting_clients/qbittorrent.png)](https://hub.docker.com/r/linuxserver/qbittorrent)
+[![Deluge](docs/torrenting_clients/deluge.png)](https://hub.docker.com/r/linuxserver/deluge)
+[![µTorrent](docs/torrenting_clients/utorrent.png)](https://www.utorrent.com/downloads)
+[![Transmission](docs/torrenting_clients/transmission.png)](https://hub.docker.com/r/linuxserver/transmission)
 
 ### Supported Media Servers
 
-[![Plex](docs/media_servers/plex.png)](https://hub.docker.com/r/linuxserver/plex) [![Jellyfin](docs/media_servers/jellyfin.png)](https://hub.docker.com/r/linuxserver/jellyfin) [![Emby](docs/media_servers/emby.png)](https://hub.docker.com/r/linuxserver/emby) ![asd](docs/media_servers/local_folder.png)
+[![Plex](docs/media_servers/plex.png)](https://hub.docker.com/r/linuxserver/plex)
+[![Jellyfin](docs/media_servers/jellyfin.png)](https://hub.docker.com/r/linuxserver/jellyfin)
+[![Emby](docs/media_servers/emby.png)](https://hub.docker.com/r/linuxserver/emby)
+![Local Folder](docs/media_servers/local_folder.png)
 
 ### Works anywhere
 
@@ -104,27 +110,14 @@ Converts Plex paths into Docker-compatible paths during processing.
 ### Plex API Retry System
 Retries temporary Plex API failures instead of immediately failing the operation.
 
-### Configurable Plex API Timeout
-Adds a configurable timeout for Plex API requests, allowing slower or busy Plex servers more time to respond.
-
-Default: `PLEX_API_TIMEOUT_SECONDS=120`
-
-### Plex Circuit Breaker
-Temporarily pauses Plex API operations after repeated failures instead of continuously sending requests to an unavailable or overloaded Plex server. Requests resume after the configured cooldown period.
-
-Defaults: `PLEX_CIRCUIT_BREAKER_FAILURES=3` and `PLEX_CIRCUIT_BREAKER_COOLDOWN_SECONDS=300`.
-
 ### Plex Library Refresh Protection
-Adds retry handling around Plex library refresh requests and prevents refresh timeouts from unnecessarily stopping the container.
+Adds retry handling around Plex library refresh requests.
 
 ### Plex WebSocket Reconnect System
-Improves Plex event monitoring reliability by reconnecting after WebSocket disconnects.
+Reconnects Plex event monitoring after WebSocket disconnects.
 
 ### Plex WebSocket Crash Protection
 Prevents unexpected Plex WebSocket failures from stopping the container.
-
-### Plex Scan Listener Cleanup
-Removes stale Plex scan WebSocket listeners after scan completion or timeout, preventing old callbacks from firing later.
 
 ### Plex Batch Processing
 Groups pending imports together to reduce repeated Plex API operations.
@@ -132,35 +125,17 @@ Groups pending imports together to reduce repeated Plex API operations.
 ### Single Plex Refresh Per Batch
 Refreshes Plex once for a group of imported episodes instead of refreshing after every episode.
 
-### Plex Queue Next-Cycle Backoff
-Defers episodes that Plex cannot yet confirm until the next normal monitoring cycle instead of immediately returning them to the same Plex batch loop. This prevents repeated processing loops against unresolved episodes.
-
 ### Plex Scan Completion Waiting
-Waits for Plex scanning/indexing to complete, or for the configured timeout to be reached, before continuing safely with confirmation and metadata processing.
+Waits for Plex scanning/indexing to complete before continuing with confirmation and metadata processing.
 
 ### Configurable Plex Scan Window
 Adds adjustable minimum scan wait, scan timeout, and scan verification controls.
 
-### Plex Show Caching
-Caches the discovered Plex show during normal processing to reduce repeated full-library searches. The cache is refreshed when required after library changes.
-
 ### Persistent State Database
 Stores processing state so interrupted work can be recovered after container restarts.
 
-### Persistent Metadata Retry Queue
-Separates episodes that Plex has already confirmed but whose metadata update failed. These episodes remain in `metadata_pending` state and can retry metadata processing without unnecessarily repeating the Plex import and confirmation workflow. Pending work is stored in the persistent state database and survives container restarts.
-
-### Persistent Retry and Backoff
-Plex confirmation, metadata processing, and quarantine recovery use the same configurable retry schedule. Retry state is stored in the persistent state database, so waiting work resumes with its existing attempt count and next retry time after a container restart instead of starting over. The default delays are 60 seconds, 300 seconds, and 900 seconds, with later retries capped at 3600 seconds.
-
-### Metadata WebSocket Recovery
-Prevents metadata WebSocket connection failures from terminating the container. Failed connections fall back safely and retry later.
-
 ### Quarantine System
-Allows problematic files to be isolated instead of blocking normal processing. Quarantined work remains recoverable and is retried with persistent backoff when the underlying file, storage, or media-server condition becomes healthy again.
-
-### Cleanup Recovery
-Records cleanup work that could not be completed immediately and safely retries it after transient filesystem, torrent-client, or container interruptions.
+Allows problematic files to be isolated instead of blocking normal processing.
 
 ### Low Disk Space Protection
 Prevents processing when available storage falls below the configured minimum.
@@ -249,7 +224,7 @@ I listed every env variable for convenience. All default are commented out, exce
 ```yaml
 services:
   onepacerr:
-    image: ghcr.io/daherokozuki/onepacerr-beta:v1.7.19-beta1.2
+    image: ghcr.io/daherokozuki/onepacerr-beta:v1.7.19-beta1.3
     container_name: onepacerr
     restart: unless-stopped
     environment:
@@ -307,11 +282,6 @@ services:
       - PLEX_LIBRARY_NAME=TV 
       #- PLEX_SKIP_METADATA_FILES=true 
       #- PLEX_PLEXMATCH_EVEN_IF_NOT=false 
-
-      # Beta 1.2 - Plex API resilience
-      - PLEX_API_TIMEOUT_SECONDS=120
-      - PLEX_CIRCUIT_BREAKER_FAILURES=3
-      - PLEX_CIRCUIT_BREAKER_COOLDOWN_SECONDS=300
       
       # Library - Jellyfin
       - JELLYFIN_URL=http://localhost:8096
@@ -338,10 +308,6 @@ services:
       - TORRENT_CATEGORY=onepacerr
       - TORRENT_CATEGORY_ONCE_COMPLETED=completed
       - TORRENT_CHECK_INTERVAL=60
-      # Keep completed torrents and their data by default.
-      # For Deluge, set true only if OnePacerr should remove the torrent and
-      # downloaded data after Plex confirms every imported episode.
-      - TORRENT_DELETE_ON_COMPLETION=false
 
 
 
@@ -354,6 +320,12 @@ services:
 
 
       # OnePacerr Beta Fork Additions
+
+      # Torrent cleanup behaviour
+      # false = move torrent to completed category
+      # true  = remove torrent and downloaded data after successful processing
+      - TORRENT_DELETE_ON_COMPLETION=false
+
       # Persistent processing state
       - STATE_ENABLED=true
       - STATE_DB=/data/state/onepacerr.db
@@ -365,12 +337,6 @@ services:
       # Minimum free disk space required before processing
       - MIN_FREE_SPACE_GB=20
 
-      # Shared persistent retry/backoff schedule
-      - RETRY_BACKOFF_1_SECONDS=60
-      - RETRY_BACKOFF_2_SECONDS=300
-      - RETRY_BACKOFF_3_SECONDS=900
-      - RETRY_BACKOFF_MAX_SECONDS=3600
-
       # Plex batch processing
       - PLEX_BATCH_SIZE=20
       - PLEX_BATCH_DELAY_SECONDS=30
@@ -379,6 +345,18 @@ services:
       - PLEX_SCAN_MIN_WAIT_SECONDS=30
       - PLEX_SCAN_TIMEOUT_SECONDS=600
       - PLEX_SCAN_VERIFY=true
+
+      # Plex API reliability
+      - PLEX_API_TIMEOUT_SECONDS=120
+      - PLEX_CIRCUIT_BREAKER_FAILURES=3
+      - PLEX_CIRCUIT_BREAKER_COOLDOWN_SECONDS=300
+
+      # Shared retry/backoff schedule
+      # Used by Plex confirmation, metadata processing and quarantine recovery
+      - RETRY_BACKOFF_1_SECONDS=60
+      - RETRY_BACKOFF_2_SECONDS=300
+      - RETRY_BACKOFF_3_SECONDS=900
+      - RETRY_BACKOFF_MAX_SECONDS=3600
 
 
       # Metadata Settings
@@ -447,17 +425,20 @@ Here is a breakdown of key optional variables you can adjust in your
 
 | Beta Fork Variables | Default | Description |
 | :--- | :--- | :--- |
-| `STATE_ENABLED` | `true` | Enables persistent processing state tracking. |
-| `STATE_DB` | `/data/state/onepacerr.db` | Location of the persistent state database. |
-| `QUARANTINE_ENABLED` | `true` | Enables quarantine handling for problematic files. |
-| `QUARANTINE_DIR` | `/data/quarantine` | Folder used for quarantined files. |
-| `MIN_FREE_SPACE_GB` | `20` | Minimum free storage required before new file processing continues. |
-| `RETRY_BACKOFF_1_SECONDS` | `60` | Delay before the first persistent retry for Plex confirmation, metadata processing, and quarantine recovery. |
-| `RETRY_BACKOFF_2_SECONDS` | `300` | Delay before the second persistent retry. |
-| `RETRY_BACKOFF_3_SECONDS` | `900` | Delay before the third persistent retry. |
-| `RETRY_BACKOFF_MAX_SECONDS` | `3600` | Maximum delay between later persistent retries. |
+| `TORRENT_DELETE_ON_COMPLETION` | `false` | If `true`, removes the torrent and downloaded data after successful Plex confirmation. If `false`, the torrent is moved to `TORRENT_CATEGORY_ONCE_COMPLETED`. |
+| `STATE_ENABLED` | `true` | Enables persistent episode processing state, recovery and retry tracking. |
+| `STATE_DB` | `/data/state/onepacerr.db` | Location of the persistent SQLite state database. |
+| `QUARANTINE_ENABLED` | `true` | Enables quarantine handling for failed or partially verified imports. |
+| `QUARANTINE_DIR` | `/data/quarantine` | Folder used to store quarantined files. |
+| `MIN_FREE_SPACE_GB` | `20` | Minimum amount of free storage OnePacerr preserves before importing files. |
+| `RETRY_BACKOFF_1_SECONDS` | `60` | Delay after the first failed Plex, metadata or quarantine recovery attempt. |
+| `RETRY_BACKOFF_2_SECONDS` | `300` | Delay after the second failed attempt. |
+| `RETRY_BACKOFF_3_SECONDS` | `900` | Delay after the third failed attempt. |
+| `RETRY_BACKOFF_MAX_SECONDS` | `3600` | Maximum retry delay used for subsequent failures. |
 
-With `STATE_ENABLED=true`, retry attempts and next-attempt times survive container restarts. This applies to Plex confirmation, metadata processing, quarantine recovery, and recoverable cleanup work. Keep `/data/state` on a persistent volume, as shown in the Compose example. The quarantine directory should also be mounted persistently so isolated files remain available for recovery.
+The persistent state system tracks imports through Plex confirmation, metadata processing and torrent cleanup. Interrupted work can resume after container restarts, while stale states are reconciled so genuinely missing episodes can be rediscovered by the normal pipeline.
+
+Failed imports are quarantined instead of blocking the processing queue. Recovery attempts use the same persistent retry/backoff system and successfully recovered quarantine files are cleaned up automatically.
 
 ### 🧪 Pipeline
 
@@ -559,14 +540,14 @@ In order for an episode to be Monitored (processed/downloaded/updated/etc), it h
 | 🍤 `PLEX_LIBRARY_NAME` | `TV Shows` | Name of the Library in Plex. |
 | `PLEX_SKIP_METADATA_FILES` | `true` | If `false`, will generate `.nfo` and poster pngs even when Media Server is Plex. |
 | `PLEX_PLEXMATCH_EVEN_IF_NOT` | `false` | If `true`, will generate `.plexmatch` file even when using a different Media Sever. |
-| `PLEX_API_TIMEOUT_SECONDS` | `120` | Maximum time in seconds to wait for an individual Plex API request. |
-| `PLEX_CIRCUIT_BREAKER_FAILURES` | `3` | Number of failed Plex operation sequences before the circuit breaker opens. |
-| `PLEX_CIRCUIT_BREAKER_COOLDOWN_SECONDS` | `300` | Time in seconds Plex requests are paused after the circuit breaker opens. |
 | `PLEX_BATCH_SIZE` | `20` | Maximum number of pending imported episodes handled together in a Plex processing batch. |
 | `PLEX_BATCH_DELAY_SECONDS` | `30` | Delay used before processing a Plex import batch. |
 | `PLEX_SCAN_MIN_WAIT_SECONDS` | `30` | Minimum wait before Plex scan completion monitoring continues. |
 | `PLEX_SCAN_TIMEOUT_SECONDS` | `600` | Maximum time to wait for Plex scan completion before safely continuing. |
 | `PLEX_SCAN_VERIFY` | `true` | Enables Plex scan/episode confirmation handling for imported episodes. |
+| `PLEX_API_TIMEOUT_SECONDS` | `120` | Timeout used for Plex API requests before retry handling takes over. |
+| `PLEX_CIRCUIT_BREAKER_FAILURES` | `3` | Number of consecutive Plex failures before temporarily opening the circuit breaker. |
+| `PLEX_CIRCUIT_BREAKER_COOLDOWN_SECONDS` | `300` | Time the Plex circuit breaker remains open before API operations are attempted again. |
 
 **Note** on `PLEX_SKIP_METADATA_FILES`: Metadata for plex is set via API because doing so with just the files is unreliable at best. For this reason, when `LIBRARY_MEDIA_SERVER` is set to `plex`, by default (`PLEX_SKIP_METADATA_FILES=true`) OnePacerr will not generate the `.nfo` and the various `poster.png` on the Media Server folder.
 
@@ -609,7 +590,6 @@ If you set `PLEX_SKIP_METADATA_FILES=false`, you can instead generate those file
 | `TORRENT_CATEGORY` | `onepacerr` | Creates downloads with this category, also filters completed torrents using this. |
 | `TORRENT_CATEGORY_ONCE_COMPLETED` | `completed` | After processing completed downloads, changes the torrent category to this one. |
 | `TORRENT_CHECK_INTERVAL` | 60 | Seconds between checking for completed downloads. |
-| `TORRENT_DELETE_ON_COMPLETION` | `false` | If `false`, a successfully imported torrent is retained and moved to `TORRENT_CATEGORY_ONCE_COMPLETED`. For Deluge, if `true`, OnePacerr removes the torrent and its downloaded data only after Plex confirms every imported episode. Other clients continue using the completed category. |
 
 ---
 
@@ -648,13 +628,6 @@ MOUNT_LIBRARY_ONEPACERR=/volume1/Media/Anime
 ```
 
 `MOUNT_LIBRARY_MEDIA_SERVER` should match the path reported by Plex. `MOUNT_LIBRARY_ONEPACERR` should match the path visible from the OnePacerr container.
-
-For Windows drive-letter paths, keep the drive and backslashes exactly as Plex reports them. In Docker Compose, use a plain scalar or single quotes so YAML does not interpret backslashes as escape sequences:
-
-```yaml
-- MOUNT_LIBRARY_MEDIA_SERVER='M:\Anime'
-- MOUNT_LIBRARY_ONEPACERR=/volume1/Media/Anime
-```
 
 
 ---
