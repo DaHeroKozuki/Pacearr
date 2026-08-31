@@ -155,6 +155,11 @@ export default {
 	TORRENT_CHECK_INTERVAL:
 		Number.parseInt(process.env.TORRENT_CHECK_INTERVAL || '60') * 1000,
 
+	// Beta: optionally delete torrent and downloaded data after successful import
+	TORRENT_DELETE_ON_COMPLETION:
+		(process.env.TORRENT_DELETE_ON_COMPLETION || 'false').toLowerCase() ===
+		'true',
+
 	/**
 	 * MOUNT
 	 */
@@ -182,51 +187,67 @@ export default {
 		process.env.METADATA_CACHE_FILE || '/data/cache/metadata.json',
 
 	// Stable6: persistent processing state
-	STATE_ENABLED:
-		(process.env.STATE_ENABLED || 'true').toLowerCase() === 'true',
-	STATE_DB:
-		process.env.STATE_DB || '/data/state/onepacerr.db',
+	STATE_ENABLED: (process.env.STATE_ENABLED || 'true').toLowerCase() === 'true',
+	STATE_DB: process.env.STATE_DB || '/data/state/onepacerr.db',
 
 	// Stable6: failed/corrupt import quarantine
 	QUARANTINE_ENABLED:
 		(process.env.QUARANTINE_ENABLED || 'true').toLowerCase() === 'true',
-	QUARANTINE_DIR:
-		process.env.QUARANTINE_DIR || '/data/quarantine',
+	QUARANTINE_DIR: process.env.QUARANTINE_DIR || '/data/quarantine',
 
 	// Stable6: destination free-space protection
-	MIN_FREE_SPACE_GB:
-		Number.parseInt(process.env.MIN_FREE_SPACE_GB || '20'),
+	MIN_FREE_SPACE_GB: Number.parseInt(process.env.MIN_FREE_SPACE_GB || '20'),
 
 	// Stable6: Plex batch processing limit
-	PLEX_BATCH_SIZE:
-		Number.parseInt(process.env.PLEX_BATCH_SIZE || '20'),
+	PLEX_BATCH_SIZE: Number.parseInt(process.env.PLEX_BATCH_SIZE || '20'),
 
 	// Stable6: Plex batch cooldown delay
-	PLEX_BATCH_DELAY_SECONDS:
-		Number.parseInt(process.env.PLEX_BATCH_DELAY_SECONDS || '30'),
+	PLEX_BATCH_DELAY_SECONDS: Number.parseInt(
+		process.env.PLEX_BATCH_DELAY_SECONDS || '30',
+	),
 
 	// Stable7: Plex scan control
-	PLEX_SCAN_MIN_WAIT_SECONDS:
-		Number.parseInt(process.env.PLEX_SCAN_MIN_WAIT_SECONDS || '30'),
+	PLEX_SCAN_MIN_WAIT_SECONDS: Number.parseInt(
+		process.env.PLEX_SCAN_MIN_WAIT_SECONDS || '30',
+	),
 
-	PLEX_SCAN_TIMEOUT_SECONDS:
-		Number.parseInt(process.env.PLEX_SCAN_TIMEOUT_SECONDS || '600'),
+	PLEX_SCAN_TIMEOUT_SECONDS: Number.parseInt(
+		process.env.PLEX_SCAN_TIMEOUT_SECONDS || '600',
+	),
 
 	PLEX_SCAN_VERIFY:
 		(process.env.PLEX_SCAN_VERIFY || 'true').toLowerCase() === 'true',
 
 	// Beta 1.1: Plex API request timeout
-	PLEX_API_TIMEOUT_SECONDS:
-		Number.parseInt(process.env.PLEX_API_TIMEOUT_SECONDS || '120'),
+	PLEX_API_TIMEOUT_SECONDS: Number.parseInt(
+		process.env.PLEX_API_TIMEOUT_SECONDS || '120',
+	),
 
 	// Beta 1.1: Plex circuit breaker
-	PLEX_CIRCUIT_BREAKER_FAILURES:
-		Number.parseInt(process.env.PLEX_CIRCUIT_BREAKER_FAILURES || '3'),
+	PLEX_CIRCUIT_BREAKER_FAILURES: Number.parseInt(
+		process.env.PLEX_CIRCUIT_BREAKER_FAILURES || '3',
+	),
 
-	PLEX_CIRCUIT_BREAKER_COOLDOWN_SECONDS:
-		Number.parseInt(
-			process.env.PLEX_CIRCUIT_BREAKER_COOLDOWN_SECONDS || '300',
-		),
+	PLEX_CIRCUIT_BREAKER_COOLDOWN_SECONDS: Number.parseInt(
+		process.env.PLEX_CIRCUIT_BREAKER_COOLDOWN_SECONDS || '300',
+	),
+	// Beta: shared persistent retry/backoff schedule
+	RETRY_BACKOFF_1_SECONDS: Number.parseInt(
+		process.env.RETRY_BACKOFF_1_SECONDS || '60',
+	),
+
+	RETRY_BACKOFF_2_SECONDS: Number.parseInt(
+		process.env.RETRY_BACKOFF_2_SECONDS || '300',
+	),
+
+	RETRY_BACKOFF_3_SECONDS: Number.parseInt(
+		process.env.RETRY_BACKOFF_3_SECONDS || '900',
+	),
+
+	RETRY_BACKOFF_MAX_SECONDS: Number.parseInt(
+		process.env.RETRY_BACKOFF_MAX_SECONDS || '3600',
+	),
+
 	METADATA_LANGUAGE: process.env.METADATA_LANGUAGE || 'en',
 	METADATA_POSTER_SET: process.env.METADATA_POSTER_SET || 'default',
 	METADATA_DISABLE_WEBSOCKET: /true/i.test(

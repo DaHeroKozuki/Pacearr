@@ -36,7 +36,7 @@ export class PipelineController {
 	async waitForFinished(suppressLog?: boolean) {
 		if (!suppressLog) Logger.info(`Waiting for active pipeline to finish...`)
 
-		return await new Promise<void>(resolve => {
+		return await new Promise<void>((resolve) => {
 			const listener = () => {
 				this.eventEmitter.removeListener('done', listener)
 				this.eventEmitter.removeListener('errored', listener)
@@ -86,7 +86,7 @@ export class PipelineController {
 		this.report.monitored.push(...monitored)
 		if (monitored.length > 0)
 			this.report.monitoredEpisodes += monitored
-				.map(a => a.episodes.length)
+				.map((a) => a.episodes.length)
 				.reduce((acc, curr) => acc + curr)
 		this.report.status = 'READY'
 	}
@@ -98,6 +98,9 @@ export class PipelineController {
 		this.report.started = new Date()
 		this.report.status = 'RUNNING'
 		this.eventEmitter.emit('running')
+
+		// Reconcile persistent state before determining which episodes are missing.
+		await Context.torrent.reconcileStartupState()
 
 		Logger.info('')
 		Logger.info(`##################################`)
@@ -145,7 +148,7 @@ export class PipelineController {
 
 			let failedArcs: { arc: number; episodes: number[] }[] = []
 			for (let ep of failed) {
-				let arc: any = failedArcs.find(a => a.arc == ep.arc)
+				let arc: any = failedArcs.find((a) => a.arc == ep.arc)
 				if (!arc) {
 					arc = { arc: ep.arc, episodes: [ep.episode] }
 					failedArcs.push(arc)
@@ -154,20 +157,20 @@ export class PipelineController {
 				}
 			}
 
-			let formattedFailed: ArcMetadata[] = current.monitored.filter(ma =>
-				failedArcs.find(fa => fa.arc == ma.arc),
+			let formattedFailed: ArcMetadata[] = current.monitored.filter((ma) =>
+				failedArcs.find((fa) => fa.arc == ma.arc),
 			)
 			for (let a of formattedFailed) {
-				const failed = failedArcs.find(fa => fa.arc == a.arc).episodes
+				const failed = failedArcs.find((fa) => fa.arc == a.arc).episodes
 
-				const all = current.monitored.find(ma => ma.arc == a.arc).episodes
-				const filtered = all.filter(me => failed.includes(me.episode))
+				const all = current.monitored.find((ma) => ma.arc == a.arc).episodes
+				const filtered = all.filter((me) => failed.includes(me.episode))
 
 				a.episodes = filtered
 			}
 			next.monitored.push(...formattedFailed)
 			next.monitoredEpisodes += formattedFailed
-				.map(a => a.episodes.length)
+				.map((a) => a.episodes.length)
 				.reduce((acc, curr) => acc + curr)
 			next.status = 'READY'
 
@@ -225,7 +228,7 @@ export class PipelineController {
 				? {
 						seasons: monitored.length,
 						episodes: monitored
-							.map(a => a.episodes.length)
+							.map((a) => a.episodes.length)
 							.reduce((acc, curr) => acc + curr),
 					}
 				: null,
@@ -317,9 +320,9 @@ export class PipelineController {
 			})
 
 			let filesInFolder = readdirSync(serverFolder).filter(
-				f => f != serverFileName,
+				(f) => f != serverFileName,
 			)
-			let trashFiles = filesInFolder.filter(f => {
+			let trashFiles = filesInFolder.filter((f) => {
 				return (
 					f.replace(/\.(nfo|mkv|mp4)$/, '') ==
 						serverFileName.replace(/\.(mkv|mp4)$/, '') ||
@@ -410,10 +413,20 @@ export class PipelineController {
 		let file = await Context.library.getExistingLibraryEpisodeFile(_episode)
 
 		if (!file) {
-			const targetLibraryFile = await Context.library.getTargetLibraryEpisodeFile(_episode)
-			const localTargetFile = path.resolve((`${targetLibraryFile.path}${targetLibraryFile.filename}`).replace(environment.MOUNT_LIBRARY_MEDIA_SERVER, environment.MOUNT_LIBRARY_ONEPACERR).replaceAll("\\", "/"))
+			const targetLibraryFile =
+				await Context.library.getTargetLibraryEpisodeFile(_episode)
+			const localTargetFile = path.resolve(
+				`${targetLibraryFile.path}${targetLibraryFile.filename}`
+					.replace(
+						environment.MOUNT_LIBRARY_MEDIA_SERVER,
+						environment.MOUNT_LIBRARY_ONEPACERR,
+					)
+					.replaceAll('\\', '/'),
+			)
 			if (existsSync(localTargetFile)) {
-				Logger.warn(`S${ma.arc}E${String(me.episode).padStart(2, '0')} not found in Plex but exists on filesystem; treating as present`)
+				Logger.warn(
+					`S${ma.arc}E${String(me.episode).padStart(2, '0')} not found in Plex but exists on filesystem; treating as present`,
+				)
 				file = localTargetFile
 			}
 		}
