@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/pacearr-banner.png" alt="Pacearr — automated One Pace library management" width="100%">
+  <img src="pacearr-banner.png" alt="Pacearr — automated One Pace library management" width="100%">
 </p>
 
 # Pacearr
