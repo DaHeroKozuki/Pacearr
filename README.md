@@ -1,707 +1,618 @@
-# ![OnePacerr](docs/logo.png)
+<p align="center">
+  <img src="docs/assets/pacearr-banner.png" alt="Pacearr — automated One Pace library management" width="100%">
+</p>
 
-[![GitHub Packages](https://img.shields.io/badge/ghcr.io-DaHeroKozuki%2FOnePacerr--beta-blue?style=flat-square&logo=github)](https://github.com/DaHeroKozuki/OnePacerr-beta/pkgs/container/onepacerr-beta)
-[![GitHub Release](https://img.shields.io/github/v/release/DaHeroKozuki/OnePacerr-beta?style=flat-square)](https://github.com/DaHeroKozuki/OnePacerr-beta/releases)
-[![GitHub Issues](https://img.shields.io/github/issues/DaHeroKozuki/OnePacerr-beta?style=flat-square)](https://github.com/DaHeroKozuki/OnePacerr-beta/issues)
-[![GitHub Last Commit](https://img.shields.io/github/last-commit/DaHeroKozuki/OnePacerr-beta?style=flat-square)](https://github.com/DaHeroKozuki/OnePacerr-beta/commits/main/)
-[![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](https://github.com/DaHeroKozuki/OnePacerr-beta?tab=MIT-1-ov-file)
+# Pacearr
 
-## Automated One Pace downloads and metadata for Plex, Jellyfin, and Emby
+**One Pace library automation, built for self-hosters.**
 
-### Built to complement your Sonarr stack
+[![Version](https://img.shields.io/badge/version-0.1.0--alpha-orange?style=flat-square)](https://github.com/DaHeroKozuki/Pacearr/releases)
+[![GitHub Packages](https://img.shields.io/badge/ghcr.io-daherokozuki%2Fpacearr-blue?style=flat-square&logo=github)](https://github.com/DaHeroKozuki/Pacearr/pkgs/container/pacearr)
+[![GitHub Release](https://img.shields.io/github/v/release/DaHeroKozuki/Pacearr?include_prereleases&style=flat-square)](https://github.com/DaHeroKozuki/Pacearr/releases)
+[![GitHub Issues](https://img.shields.io/github/issues/DaHeroKozuki/Pacearr?style=flat-square)](https://github.com/DaHeroKozuki/Pacearr/issues)
+[![GitHub Last Commit](https://img.shields.io/github/last-commit/DaHeroKozuki/Pacearr?style=flat-square)](https://github.com/DaHeroKozuki/Pacearr/commits/main)
+[![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
 
-Because Sonarr does not natively support [One
-Pace](https://onepace.net/) (the fan-edited, manga-accurate version of One Piece), this app
-bridges the gap by automatically downloading, organizing, and keeping your One Pace
-episodes fully up to date both on your disk, and on your Media Server of chosing (Plex, Jellyfin, Emby).
+Pacearr is a self-hosted One Pace library manager that automates release discovery, downloading, importing, file organization, metadata, posters, and media-server integration.
 
-Other than organizing your episode files, it also updates metadata and posters so that it looks nice and professional on your Media Server.
+Originally derived from [OnePacerr](https://github.com/eltharynd/OnePacerr), Pacearr is evolving into an independent application focused on resilient automation, flexible release management, and a modern web-based experience.
 
-It supports the most popular torrenting clients (qBittorrent, deluge, µTorrent and transmission) and the most popular Media Servers (Plex, Jellyfin, Emby), or it can even be used without a torrenting client or a Media Server at all.
+> [!IMPORTANT]
+> **Pacearr is alpha software.** Version `0.1.0-alpha` begins the Pacearr development line. The background automation and reliability foundation is functional, but the planned web UI, release profiles, and other Sonarr-like management features described in the roadmap are **not implemented yet**. Back up your configuration and persistent state before upgrading or testing.
 
-Also check [One Pace public API](https://github.com/eltharynd/one-pace-api).
+Pacearr is not affiliated with, endorsed by, or maintained by the One Pace team.
 
-Not affiliated with One Pace's team.
+## Table of contents
 
-## 🚀 OnePacerr Beta Fork
+- [What Pacearr does](#what-pacearr-does)
+- [Current capabilities](#current-capabilities)
+- [Planned features](#planned-features)
+- [Compatibility](#compatibility)
+- [Getting started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Docker Compose](#docker-compose)
+  - [Recommended first run](#recommended-first-run)
+  - [Running locally](#running-locally)
+- [Configuration reference](#configuration-reference)
+  - [General](#general)
+  - [Reliability and persistent state](#reliability-and-persistent-state)
+  - [Pipeline](#pipeline)
+  - [Filters](#filters)
+  - [Library](#library)
+  - [Plex](#plex)
+  - [Jellyfin](#jellyfin)
+  - [Emby](#emby)
+  - [Torrent clients](#torrent-clients)
+  - [Path mappings](#path-mappings)
+  - [Metadata](#metadata)
+- [Posters](#posters)
+- [Reliability and recovery](#reliability-and-recovery)
+- [Roadmap](#roadmap)
+- [Migration from OnePacerr](#migration-from-onepacerr)
+- [Origins and attribution](#origins-and-attribution)
+- [Contributing](#contributing)
+- [Credits and acknowledgements](#credits-and-acknowledgements)
+- [License and disclaimer](#license-and-disclaimer)
 
-This repository is a beta fork of the original [OnePacerr](https://github.com/eltharynd/OnePacerr) project by [eltharynd](https://github.com/eltharynd). It preserves the original OnePacerr configuration structure and supported platforms while adding stability, recovery, and mixed Linux/Windows compatibility improvements.
+## What Pacearr does
 
-The main testing environment for this beta release is:
+Sonarr does not natively understand [One Pace](https://onepace.net/), the fan-edited, manga-focused version of One Piece. Pacearr fills that gap by monitoring One Pace releases, comparing them with an existing library, sending missing episodes to a supported torrent client, importing completed downloads, and updating the corresponding media-server metadata and artwork.
 
-- Plex Media Server
-- Deluge torrent client
-- OnePacerr running in Docker/Linux
-- Plex Media Server running on Windows
+Pacearr can work with Plex, Jellyfin, Emby, or a local folder. It can also organize an existing library without downloading anything.
 
-The original project continues to support Plex, Jellyfin, Emby, Local Folder libraries and the supported torrent clients documented below. The beta-specific changes are additions on top of that original functionality.
+## Current capabilities
 
+The `0.1.0-alpha` foundation currently provides:
 
-### Supported Torrenting Clients
+- RSS-based discovery of One Pace releases and metadata
+- comparison of available releases with an existing library
+- optional CRC32 verification and replacement of outdated files
+- optional organization and renaming of existing files
+- automatic submission of missing releases to a torrent client
+- completed-download monitoring, import, and category changes
+- Plex, Jellyfin, Emby, and local-folder library modes
+- episode, season, and show metadata and poster management
+- persistent episode-processing state across restarts
+- retry and backoff for temporary Plex and metadata failures
+- recovery of interrupted imports and pending torrent cleanup
+- Plex API timeouts, circuit breaking, scan monitoring, and WebSocket recovery
+- batched Plex imports and refreshes
+- quarantine handling for problematic files
+- minimum-free-space protection
+- mixed Windows/Plex and Linux/Docker path mapping
+- structured text or JSON logging
 
-[![qBittorrent](docs/torrenting_clients/qbittorrent.png)](https://hub.docker.com/r/linuxserver/qbittorrent)
-[![Deluge](docs/torrenting_clients/deluge.png)](https://hub.docker.com/r/linuxserver/deluge)
-[![µTorrent](docs/torrenting_clients/utorrent.png)](https://www.utorrent.com/downloads)
-[![Transmission](docs/torrenting_clients/transmission.png)](https://hub.docker.com/r/linuxserver/transmission)
+### What is not available yet
 
-### Supported Media Servers
+The following ideas are part of Pacearr's direction, but are not current features:
 
-[![Plex](docs/media_servers/plex.png)](https://hub.docker.com/r/linuxserver/plex)
-[![Jellyfin](docs/media_servers/jellyfin.png)](https://hub.docker.com/r/linuxserver/jellyfin)
-[![Emby](docs/media_servers/emby.png)](https://hub.docker.com/r/linuxserver/emby)
-![Local Folder](docs/media_servers/local_folder.png)
+- a browser-based management interface
+- an episode and arc dashboard
+- interactive monitoring and queue controls
+- configurable release and fallback profiles
+- UI-managed quality, language, Dub/Sub, and cut preferences
+- automatic upgrades based on those profiles
+- activity history and notification management
+- general migration of day-to-day settings from environment variables into the UI
 
-### Works anywhere
+## Planned features
 
-| **Cross Platform** | ![Docker](docs/supported_os/docker.png) | ![Windows](docs/supported_os/windows.png) | ![MacOS](docs/supported_os/macos.png) | ![Linux](docs/supported_os/linux.png) |
-| --- | --- | --- | --- | --- |
-| [**Deploy Docker Image**](#-deploy-via-docker) | ✅ | ✅ | ✅ | ✅ |
-| [**Run locally**](#-running-locally) | | ✅* | ✅* | ✅* |
+Pacearr is moving toward a Sonarr-inspired experience designed around One Pace's release structure rather than general television indexing.
 
-*Requires [Node](https://nodejs.org/en/download) installed
+Planned work includes:
 
-[![Nodejs](docs/supported_os/node.png)](https://nodejs.org/en/download)
+- **Web UI:** dashboard, library health, arcs, episodes, queue, activity, history, logs, and settings
+- **Release monitoring:** clear monitored/unmonitored state and release availability per episode
+- **Release profiles:** ordered preferences for resolution, language, Dub/Sub, Extended Cut, Standard Cut, and fallback behavior
+- **Upgrade detection:** identify and safely replace installed releases when a preferred or corrected version becomes available
+- **Persistent configuration:** manage routine application, media-server, and download-client settings through the UI
+- **Operational visibility:** surface pipeline state, failures, retries, and recovery actions without requiring log inspection
 
-## 📃 Table of Contents
+An eventual profile might express preferences such as:
 
-- 🚀 [OnePacerr Beta Fork](#-onepacerr-beta-fork)
-- 🧪 [Beta Improvements](#-beta-improvements)
-- ✨ [Features](#-features)
-- 🚀 [Getting Started](#-getting-started)
-  - 🧳 [Prerequisites](#-prerequisites)
-  - 📝 [Recommended configs](#-recommended-configs)
-    - 🐔 [Base Operation](#-base-operation)
-    - 🐣 [First Run](#-first-run)
-- ⚡ [Usage](#-usage)
-  - 🐳 [Deploy via Docker](#-deploy-via-docker)
-  - 🟢 [Running locally](#-running-locally)
-  - 👩‍💻 [Contributing to the development](#-contributing-to-the-development)
+```text
+1. English Dub — Extended Cut — 1080p
+2. English Dub — 1080p
+3. English Subtitles — Extended Cut — 1080p
+4. English Subtitles — 1080p
+5. Fall back to 720p
+```
 
-- ⚙️ [Environment Variables Explained](#️-environment-variables-explained)
-  - 🧪 [Beta Fork](#-beta-fork)
-  - 🧪 [Pipeline](#-pipeline)
-  - 🔎 [Filters](#-filters)
-  - 🎬 [Library (common)](#-library-common)
-    - 📂 [Library (Local Folder)](#-library-local-folder)
-    - 🍊 [Library (Plex Media Server)](#-library-plex-media-server)
-    - 🪼 [Library (Jellyfin)](#-library-jellyfin)
-    - ✳️ [Library (Emby)](#️-library-emby)
-    - 💾 [Torrent](#-torrent)
-    - 💿 [Mount Path Mappings](#-mount-path-mappings)
-      - 🪟 [Windows Plex Compatibility](#-windows-plex-compatibility)
-    - ℹ️ [Metadata](#ℹ️-metadata)
-- 🖼️ [Poster Sets](#️-poster-sets)
-  - 🔍 [Previews](#-previews)
-  - 📥 [Adding/Updating Sets](#-addingupdating-sets)
-- 🧪 [Pipeline Diagram](#-pipeline-diagram)
-- 📅 [Roadmap](#-roadmap)
-- 🔧 [OnePacerr Beta Fork Credits](#-onepacerr-beta-fork-credits)
-- 🤝 [Credits & Acknowledgements](#-credits--acknowledgements)
-- 💗 [Support (One Pace, not me!)](#-support-one-pace-not-me)
+This example illustrates the planned design only; profiles are not implemented in `0.1.0-alpha`.
 
-## 🧪 Beta Improvements
+## Compatibility
 
-### Windows Plex Path Mapping Fix
-Allows Docker/Linux OnePacerr to communicate correctly with Windows Plex library paths.
+### Supported media servers
 
-### Plex Import Path Conversion
-Converts Plex paths into Docker-compatible paths during processing.
+- [Plex](https://www.plex.tv/)
+- [Jellyfin](https://jellyfin.org/)
+- [Emby](https://emby.media/)
+- local folder, without a media server
 
-### Plex API Retry System
-Retries temporary Plex API failures instead of immediately failing the operation.
+### Supported torrent clients
 
-### Plex Library Refresh Protection
-Adds retry handling around Plex library refresh requests.
+- [qBittorrent](https://www.qbittorrent.org/)
+- [Deluge](https://deluge-torrent.org/)
+- [Transmission](https://transmissionbt.com/)
+- [µTorrent](https://www.utorrent.com/)
 
-### Plex WebSocket Reconnect System
-Reconnects Plex event monitoring after WebSocket disconnects.
+### Platforms
 
-### Plex WebSocket Crash Protection
-Prevents unexpected Plex WebSocket failures from stopping the container.
+Docker is the recommended deployment method and can run anywhere Docker is supported. Local execution is available on Windows, macOS, and Linux with Node.js installed.
 
-### Plex Batch Processing
-Groups pending imports together to reduce repeated Plex API operations.
+## Getting started
 
-### Single Plex Refresh Per Batch
-Refreshes Plex once for a group of imported episodes instead of refreshing after every episode.
+### Prerequisites
 
-### Plex Scan Completion Waiting
-Waits for Plex scanning/indexing to complete before continuing with confirmation and metadata processing.
+For the normal automated workflow, you need:
 
-### Configurable Plex Scan Window
-Adds adjustable minimum scan wait, scan timeout, and scan verification controls.
+- Docker and Docker Compose, or Node.js for a local installation
+- one supported torrent client with its Web UI/API enabled
+- a Plex, Jellyfin, or Emby server, or a writable local library folder
+- paths and permissions that allow Pacearr to read completed downloads and write to the library
 
-### Persistent State Database
-Stores processing state so interrupted work can be recovered after container restarts.
+qBittorrent is the recommended torrent client. You may omit torrent-client integration when using Pacearr only to organize or update an existing library.
 
-### Quarantine System
-Allows problematic files to be isolated instead of blocking normal processing.
+### Docker Compose
 
-### Low Disk Space Protection
-Prevents processing when available storage falls below the configured minimum.
+The Pacearr container uses this GitHub Container Registry path:
 
-### Pipeline Error Protection
-Adds safeguards around missing Plex paths and temporary Plex/filesystem states so they do not unnecessarily stop the container.
+```text
+ghcr.io/daherokozuki/pacearr
+```
 
-## ✨ Features
+The following Compose file is a complete reference example. Change URLs, credentials, IDs, and volume paths for your environment. Remove settings for media servers and torrent clients you are not using.
 
-- **Automated Discovery:** Continuously pulls One Pace's RSS Release feed and
-  metadata to detect missing and new releases.
-- **Smart Library Scanning:** Scans your existing Media Server (Plex, Jellyfin, Emby) or Local Folder Library to compare latest episodes against your local files.
-- **File Verification (Optional):** Hashes existing files to ensure they match the latest
-  releases and automatically re-downloads outdated versions.
-- **File Organization (Optional):** Scans your existing Media Server (Plex, Jellyfin, Emby) or Local Folder library and renames files accordingly when needed.
-- **Seamless Downloading (Optional):** Automatically sends `magnetURI` links to torrent client for
-  missing episodes.
+> [!CAUTION]
+> Do not publish a real Plex token or torrent-client password in a repository. Keep secrets in a private `.env` file or another secret-management system.
 
-- **Torrent Monitoring (Optional):** Tracks download progress. Once completed, it:
-  - Copies and renames the file to your designated Library folder.
-  - Updates the metadata either directly on your Media Server (Plex, Jellyfin, Emby) or creates the files on your Local Folder for later imports.
-  - Assigns a custom (`completed`) category to the processed torrents.
+```yaml
+services:
+  pacearr:
+    image: ghcr.io/daherokozuki/pacearr:v0.1.0-alpha
+    container_name: pacearr
+    restart: unless-stopped
+    environment:
+      # Container identity and logging
+      TZ: Europe/London
+      PUID: 1000
+      PGID: 1000
+      LOG_LEVEL: info
+      LOG_OUTPUT: text
 
-## 🚀 Getting Started
+      # Pipeline
+      PIPELINE_SKIP_VERIFY_PRESENT_FILES: "false"
+      PIPELINE_SKIP_ORGANIZE_PRESENT_FILES: "false"
+      PIPELINE_SKIP_UPDATE_METADATA_PRESENT_FILES: "false"
+      PIPELINE_PREFER_EXTENDED: "true"
+      PIPELINE_PREFER_ALTERNATE: "true"
 
-### 🧳 Prerequisites
+      # Library: plex, jellyfin, emby, or none
+      LIBRARY_MEDIA_SERVER: plex
+      LIBRARY_SERIES_NAME: One Pace
+      LIBRARY_SERIES_FOLDER_NAME: One Pace
+      LIBRARY_FILENAME_FORMAT: "{SERIES_NAME} - S{ARC}E{EPISODE} - {TITLE}.mkv"
+      LIBRARY_CREATE_SHOW_IF_NOT_FOUND: "true"
 
-Before running OnePacerr, ensure you have the following services up and running:
+      # Plex example
+      PLEX_URL: http://plex:32400
+      PLEX_TOKEN: ${PLEX_TOKEN}
+      PLEX_LIBRARY_NAME: TV
+      PLEX_API_TIMEOUT_SECONDS: 120
+      PLEX_CIRCUIT_BREAKER_FAILURES: 3
+      PLEX_CIRCUIT_BREAKER_COOLDOWN_SECONDS: 300
+      PLEX_BATCH_SIZE: 20
+      PLEX_BATCH_DELAY_SECONDS: 30
+      PLEX_SCAN_MIN_WAIT_SECONDS: 30
+      PLEX_SCAN_TIMEOUT_SECONDS: 600
+      PLEX_SCAN_VERIFY: "true"
 
-- **Docker & Docker Compose** (or k8s, or custom app in Truenas or equivalent)
-  - Alternatively you can run it locally with node:
-    - create a `.env` file in root (use `sample.env` as example)
-    - `npm install`
-    - `npm run build`
-    - `npm start`
-- **one of these torrent clients** (with WebUI/APIs enabled)
-  - [qBittorrent](https://hub.docker.com/r/linuxserver/qbittorrent) (Recommended)
-  - [Deluge](https://hub.docker.com/r/linuxserver/deluge)
-  - More torrenting clients coming
-- You can simply organize a Local Folder, but the best use case is to organize your Media Server of choosing:
-  - [**Plex Media Server**](https://hub.docker.com/r/linuxserver/plex)
-  - [**Jellyfin**](https://hub.docker.com/r/linuxserver/jellyfin)
-  - [**Emby**](https://hub.docker.com/r/linuxserver/emby)
+      # Torrent-client example
+      TORRENT_CLIENT: qbittorrent
+      TORRENT_URL: http://qbittorrent:8080
+      TORRENT_USER: ${TORRENT_USER}
+      TORRENT_PASSWORD: ${TORRENT_PASSWORD}
+      TORRENT_CLIENT_TIMEOUT: 10
+      TORRENT_CATEGORY_FORCE: "false"
+      TORRENT_CATEGORY: onepacerr
+      TORRENT_CATEGORY_ONCE_COMPLETED: completed
+      TORRENT_CHECK_INTERVAL: 60
 
-### 📝 Recommended configs
+      # Persistent reliability state
+      STATE_ENABLED: "true"
+      STATE_DB: /data/state/onepacerr.db
+      QUARANTINE_ENABLED: "true"
+      QUARANTINE_DIR: /data/quarantine
+      MIN_FREE_SPACE_GB: 20
 
-#### 🐔 Base Operation
+      # Metadata
+      METADATA_URL: https://onepacerr.com/api/v1
+      METADATA_LANGUAGE: en
+      METADATA_POSTER_SET: default
+      METADATA_DISABLE_WEBSOCKET: "false"
+      METADATA_CHECK_INTERVAL: 3600
 
-If your files are nicely named and organized and if your Media Server has all the metadata, you can safely leave these as true (default) or not declare them at all:
+      # Legacy path-mapping identifiers; uncomment only when needed.
+      # MOUNT_LIBRARY_MEDIA_SERVER: /media-server/TV
+      # MOUNT_LIBRARY_ONEPACERR: /library
+      # MOUNT_DOWNLOADS_TORRENT: /torrent-client/downloads
+      # MOUNT_DOWNLOADS_ONEPACERR: /downloads
+    volumes:
+      - /path/to/library:/library
+      - /path/to/downloads:/downloads
+      - ./state:/data/state
+      - ./quarantine:/data/quarantine
+```
+
+Create a private `.env` file beside `docker-compose.yml` for the interpolated secrets:
 
 ```dotenv
-# 🐔 BASE CONFIG WHEN YOUR LIBRARY IS ALREADY WELL ORGANIZED
+PLEX_TOKEN=replace-with-your-token
+TORRENT_USER=replace-with-your-username
+TORRENT_PASSWORD=replace-with-your-password
+```
+
+Then start Pacearr:
+
+```bash
+docker compose up -d
+docker compose logs -f pacearr
+```
+
+> [!NOTE]
+> `PUID` and `PGID` must identify a user/group with read access to the download directory and read/write access to the library. Your media-server account must also be able to read the imported library files.
+
+### Recommended first run
+
+If your library is already organized and you do not want Pacearr to inspect or modify existing items, keep the default skip behavior:
+
+```dotenv
 PIPELINE_SKIP_VERIFY_PRESENT_FILES=true
 PIPELINE_SKIP_ORGANIZE_PRESENT_FILES=true
 PIPELINE_SKIP_UPDATE_METADATA_PRESENT_FILES=true
 ```
 
-This will prevent the app to verify hash (CRC32 hashing can take a while depending on your machine), to verify Media Server file names (and rename where necessary) and to update metadata for **the files that are already present on it**.
-
-#### 🐣 First Run
-
-My recommendation **when Media Server already has some/all of the episodes** is to run it once with the following configs, so that every file is gonna get verified to be up to date and all metadata is gonna be imported.
+To audit an existing library on the first run, enable all three operations:
 
 ```dotenv
-# 🐣 RECOMMENDED CONFIG FOR FIRST RUN
 PIPELINE_SKIP_VERIFY_PRESENT_FILES=false
 PIPELINE_SKIP_ORGANIZE_PRESENT_FILES=false
 PIPELINE_SKIP_UPDATE_METADATA_PRESENT_FILES=false
 ```
 
-After the app is done processing all of the present seasons/episodes, it's gonna continue monitoring for completed downloads and import as usual.
+CRC32 verification can take considerable time on a large library. You can also set `PIPELINE_SKIP_DOWNLOADS=true` for the initial audit, stop Pacearr after it finishes, and then restore your normal settings.
 
-You can also optionally disable downloads for this first run, then stop the app once it's done and update the env vars to keep it running with the basic config.
+### Running locally
 
-## ⚡ Usage
-
-### 🐳 Deploy via Docker
-
-The recommended way to deploy is via `docker-compose`.
-
-Create a `docker-compose.yml` file and copy the configuration below. Make sure to update
-the environment variables and volume mounts to match your server's setup.
-
-I listed every env variable for convenience. All default are commented out, except the most critical.
-
-```yaml
-services:
-  onepacerr:
-    image: ghcr.io/daherokozuki/onepacerr-beta:v1.7.19-beta1.3
-    container_name: onepacerr
-    restart: unless-stopped
-    environment:
-      # Set the Timezone to yours
-      - TZ=Europe/Zurich
-      # Set the User/Group it should run as.
-      # This User/Group should have read access to torrent folder
-      # This User/Group should have read/write access to library folder
-      # Your Media Server User/Group should also have read access to library folder
-      - PUID=568
-      - PGID=568
-
-      # General
-      #- LOG_LEVEL=info
-      #- LOG_OUTPUT=text
-
-
-
-      # Pipeline
-      - PIPELINE_SKIP_VERIFY_PRESENT_FILES=false
-      #- PIPELINE_SKIP_VERIFY_NOT_FOR_EXTENDED=false
-      - PIPELINE_SKIP_ORGANIZE_PRESENT_FILES=false
-      - PIPELINE_SKIP_UPDATE_METADATA_PRESENT_FILES=false
-      #- PIPELINE_SKIP_DOWNLOADS=false
-      #- PIPELINE_SKIP_DOWNLOADS_IMPORTS=false
-      #- PIPELINE_FORCE_REDOWNLOAD=false
-      #- PIPELINE_SKIP_POSTERS=false
-
-      #- PIPELINE_INCLUDE_SPECIALS=false
-      - PIPELINE_PREFER_EXTENDED=true
-      - PIPELINE_PREFER_ALTERNATE=true
-
-      #- PIPELINE_FILTERS_INCLUDE=S01
-      #- PIPELINE_FILTERS_EXCLUDE=S35,S36
-
-      #- PIPELINE_RETRY_INTERVAL=10
-
-
-
-      # Library 
-      - LIBRARY_MEDIA_SERVER=plex 
-      - LIBRARY_SERIES_NAME=One Pace
-      - LIBRARY_SERIES_FOLDER_NAME=One Pace
-
-      - LIBRARY_FILENAME_FORMAT={SERIES_NAME} - S{ARC}E{EPISODE} - {TITLE}.mkv
-      - LIBRARY_CREATE_SHOW_IF_NOT_FOUND=true
-
-
-      # Library - None
-      #- LIBRARY_NONE_ROOT_FOLDER=C:\\OnePacerr
-
-      # Library - Plex
-      - PLEX_URL=http://localhost:32400
-      - PLEX_TOKEN=<your-token-here>
-      - PLEX_LIBRARY_NAME=TV 
-      #- PLEX_SKIP_METADATA_FILES=true 
-      #- PLEX_PLEXMATCH_EVEN_IF_NOT=false 
-      
-      # Library - Jellyfin
-      - JELLYFIN_URL=http://localhost:8096
-      - JELLYFIN_USERNAME=<your-username-here>
-      - JELLYFIN_PASSWORD=<your-password-here>
-      #- JELLYFIN_LIBRARY_NAME=Shows
-
-      # Library - Emby
-      - EMBY_URL=http://localhost:8096
-      - EMBY_USERNAME=<your-username-here>
-      - EMBY_PASSWORD=<your-password-here>
-      #- EMBY_LIBRARY_NAME=TV Shows
-
-
-
-
-      # Torrent Settings
-      - TORRENT_URL=http://localhost:8080
-      - TORRENT_USER=<your-username-here>
-      - TORRENT_PASSWORD=<your-password-here>
-      - TORRENT_CLIENT=qbittorrent
-      - TORRENT_CLIENT_TIMEOUT=10
-      - TORRENT_CATEGORY_FORCE=false
-      - TORRENT_CATEGORY=onepacerr
-      - TORRENT_CATEGORY_ONCE_COMPLETED=completed
-      - TORRENT_CHECK_INTERVAL=60
-
-
-
-      # Cross-Mount Mappings (Uncomment if needed, defaults to nothing)
-      #- MOUNT_LIBRARY_MEDIA_SERVER=/mnt/Library/Series
-      #- MOUNT_LIBRARY_ONEPACERR=\\TRUENAS\series
-      #- MOUNT_DOWNLOADS_TORRENT=/mnt/Applications/Downloads
-      #- MOUNT_DOWNLOADS_ONEPACERR=\\TRUENAS\downloads
-
-
-
-      # OnePacerr Beta Fork Additions
-
-      # Torrent cleanup behaviour
-      # false = move torrent to completed category
-      # true  = remove torrent and downloaded data after successful processing
-      - TORRENT_DELETE_ON_COMPLETION=false
-
-      # Persistent processing state
-      - STATE_ENABLED=true
-      - STATE_DB=/data/state/onepacerr.db
-
-      # Quarantine problematic files
-      - QUARANTINE_ENABLED=true
-      - QUARANTINE_DIR=/data/quarantine
-
-      # Minimum free disk space required before processing
-      - MIN_FREE_SPACE_GB=20
-
-      # Plex batch processing
-      - PLEX_BATCH_SIZE=20
-      - PLEX_BATCH_DELAY_SECONDS=30
-
-      # Plex scan completion controls
-      - PLEX_SCAN_MIN_WAIT_SECONDS=30
-      - PLEX_SCAN_TIMEOUT_SECONDS=600
-      - PLEX_SCAN_VERIFY=true
-
-      # Plex API reliability
-      - PLEX_API_TIMEOUT_SECONDS=120
-      - PLEX_CIRCUIT_BREAKER_FAILURES=3
-      - PLEX_CIRCUIT_BREAKER_COOLDOWN_SECONDS=300
-
-      # Shared retry/backoff schedule
-      # Used by Plex confirmation, metadata processing and quarantine recovery
-      - RETRY_BACKOFF_1_SECONDS=60
-      - RETRY_BACKOFF_2_SECONDS=300
-      - RETRY_BACKOFF_3_SECONDS=900
-      - RETRY_BACKOFF_MAX_SECONDS=3600
-
-
-      # Metadata Settings
-      - METADATA_URL=https://onepacerr.com/api/v1
-      - METADATA_LANGUAGE=en
-      - METADATA_POSTER_SET=default
-      - METADATA_DISABLE_WEBSOCKET=false
-      - METADATA_CHECK_INTERVAL=3600
-    volumes:
-      - /mnt/Library/Series:/mnt/Library/Series
-      - /mnt/Applications/Downloads:/mnt/Applications/Downloads
-      - ./state:/data/state
-      - ./quarantine:/data/quarantine
-```
-
-### 🟢 Running locally
-
-Install [node](https://nodejs.org/en/download) (>=24 tested) on your machine then:
-
-- create a `.env` file in root (use `sample.env` as example)
-- run `npm install`
-- run `npm run build`
-- run `npm start`
-
-### 👩‍💻 Contributing to the development
-
-For developing first install dependencies:
+Install Node.js (Node.js 24 has been tested), clone the repository, and create `.env` from `sample.env`:
 
 ```bash
-npm i
+npm install
+npm run build
+npm start
 ```
 
-Then, I recommend opening two side-by side tabs in vs code terminal and running one of these in each:
+## Configuration reference
 
-```bash
-#Compile typescript and watch for changes
-#if you have typescript installed globally `npm i -g typescript`
-tsc -w
-#otherwise you can do
-npx tsc -w
+The current alpha retains the environment-variable configuration model inherited from OnePacerr. Some names and defaults intentionally still contain `ONEPACERR` or `onepacerr` because they are active compatibility identifiers in the code. Do not replace them with guessed `PACEARR` equivalents.
 
+Legend:
 
-#Shortcut for nodemon --enable-source-maps dist/index.js
-#runs app and reloads any time tsc-w recompiles an edited file
-npm run dev
-```
-
-## ⚙️ Environment Variables Explained
-
-Here is a breakdown of key optional variables you can adjust in your
-`docker-compose.yml` or in your `.env` file:
-
-- ⭐ Mandatory
-- 🍤 Can leave empty but double check default works for you
-- 🍏 Useful
-- 💭 These configuration are specific to your chosen Media Server type (`$LIBRARY_MEDIA_SERVER`) so you only need to specify the ones for your case.
+- **Required:** normally required for the selected integration
+- **Default:** used when the variable is omitted
 
 ### General
 
-| General Variables | Default | Description |
+| Variable | Default | Description |
 | :--- | :--- | :--- |
-| `LOG_LEVEL` | `info` | Can be `critical`, `error`, `warning`, `info`, `debug`. |
-| `LOG_OUTPUT` | `text` | Can be set to `json` if you need to scrape your logs with Loki/Promtail for Grafana. |
+| `LOG_LEVEL` | `info` | `critical`, `error`, `warning`, `info`, or `debug`. |
+| `LOG_OUTPUT` | `text` | Set to `json` for structured log collection. |
 
-### 🧪 Beta Fork
+### Reliability and persistent state
 
-| Beta Fork Variables | Default | Description |
+| Variable | Default | Description |
 | :--- | :--- | :--- |
-| `TORRENT_DELETE_ON_COMPLETION` | `false` | If `true`, removes the torrent and downloaded data after successful Plex confirmation. If `false`, the torrent is moved to `TORRENT_CATEGORY_ONCE_COMPLETED`. |
-| `STATE_ENABLED` | `true` | Enables persistent episode processing state, recovery and retry tracking. |
-| `STATE_DB` | `/data/state/onepacerr.db` | Location of the persistent SQLite state database. |
-| `QUARANTINE_ENABLED` | `true` | Enables quarantine handling for failed or partially verified imports. |
-| `QUARANTINE_DIR` | `/data/quarantine` | Folder used to store quarantined files. |
-| `MIN_FREE_SPACE_GB` | `20` | Minimum amount of free storage OnePacerr preserves before importing files. |
-| `RETRY_BACKOFF_1_SECONDS` | `60` | Delay after the first failed Plex, metadata or quarantine recovery attempt. |
-| `RETRY_BACKOFF_2_SECONDS` | `300` | Delay after the second failed attempt. |
-| `RETRY_BACKOFF_3_SECONDS` | `900` | Delay after the third failed attempt. |
-| `RETRY_BACKOFF_MAX_SECONDS` | `3600` | Maximum retry delay used for subsequent failures. |
+| `STATE_ENABLED` | `true` | Enables persistent processing-state tracking. |
+| `STATE_DB` | `/data/state/onepacerr.db` | Persistent state database. The legacy filename is still the implemented default. |
+| `QUARANTINE_ENABLED` | `true` | Isolates problematic files rather than allowing them to block normal processing. |
+| `QUARANTINE_DIR` | `/data/quarantine` | Quarantine directory. |
+| `MIN_FREE_SPACE_GB` | `20` | Minimum free storage required before new file processing continues. |
 
-The persistent state system tracks imports through Plex confirmation, metadata processing and torrent cleanup. Interrupted work can resume after container restarts, while stale states are reconciled so genuinely missing episodes can be rediscovered by the normal pipeline.
+Persist `/data/state` across container replacements. If quarantine is enabled, persist `/data/quarantine` as well.
 
-Failed imports are quarantined instead of blocking the processing queue. Recovery attempts use the same persistent retry/backoff system and successfully recovered quarantine files are cleaned up automatically.
+### Pipeline
 
-### 🧪 Pipeline
-
-| Pipeline Variables | Default | Description |
+| Variable | Default | Description |
 | :--- | :--- | :--- |
-| 🍏 `PIPELINE_SKIP_VERIFY_PRESENT_FILES` | `true` | If `false`, hashes files present in Plex upon metadata updates to ensure they are the latest/wanted versions. |
-| 🍏 `PIPELINE_SKIP_VERIFY_NOT_FOR_EXTENDED` | `false` | If `true`, PIPELINE_SKIP_VERIFY_PRESENT_FILES only applies to episodes without extended or alternate versions |
-| 🍏 `PIPELINE_SKIP_ORGANIZE_PRESENT_FILES` | `true` | If `false`, makes sure the files existing on your Library are in the correct folder and named correctly. |
-| 🍏 `PIPELINE_SKIP_UPDATE_METADATA_PRESENT_FILES` | `true` | If `false`, automatically updates metadata for files already in your Library, otherwise only does so for new downloads. |
-| 🍏 `PIPELINE_SKIP_DOWNLOADS` | `false` | If `true`, skips download. Use if you only want to organize your current files. |
-| 🍏 `PIPELINE_SKIP_DOWNLOADS_IMPORTS` | `false` | If `true`, skips updating posters when updating metadata. |
-| `PIPELINE_FORCE_REDOWNLOAD` | `false` | If `true`, downloads and imports files even if already present. |
-| `PIPELINE_SKIP_POSTERS` | `false` | If `true`, skips updating posters when updating metadata. |
-| --- | --- | --- |
-| `PIPELINE_INCLUDE_SPECIALS` | `false` | Set to `true` to also process specials. |
-| `PIPELINE_PREFER_EXTENDED` | `false` | Set to `true` to prioritize extended cuts over standard releases. |
-| `PIPELINE_PREFER_ALTERNATE` | `false` | Set to `true` to prefer the G-8 cut at the end of Skypiea. |
-| --- | --- | --- |
-| `PIPELINE_FILTERS_INCLUDE` | _None_ | Only process seasons/episodes that match these [filters](#-filters). |
-| `PIPELINE_FILTERS_EXCLUDE` | _None_ | Only process seasons/episodes that don't match these [filters](#-filters). |
-| `PIPELINE_RETRY_INTERVAL` | 10 | Seconds to wait before re-running pipeline after failures. |
+| `PIPELINE_SKIP_VERIFY_PRESENT_FILES` | `true` | When `false`, hashes existing files to confirm they match the wanted releases. |
+| `PIPELINE_SKIP_VERIFY_NOT_FOR_EXTENDED` | `false` | When `true`, limits verification behavior around releases without extended or alternate variants. |
+| `PIPELINE_SKIP_ORGANIZE_PRESENT_FILES` | `true` | When `false`, checks and corrects folders and filenames for existing library items. |
+| `PIPELINE_SKIP_UPDATE_METADATA_PRESENT_FILES` | `true` | When `false`, updates metadata for existing files as well as new imports. |
+| `PIPELINE_SKIP_DOWNLOADS` | `false` | When `true`, does not submit downloads; useful for library-only operation. |
+| `PIPELINE_SKIP_DOWNLOADS_IMPORTS` | `false` | When `true`, skips importing completed downloads. |
+| `PIPELINE_FORCE_REDOWNLOAD` | `false` | Downloads and imports even when a file is already present. Use with care. |
+| `PIPELINE_SKIP_POSTERS` | `false` | Skips poster updates. |
+| `PIPELINE_INCLUDE_SPECIALS` | `false` | Includes specials in processing. |
+| `PIPELINE_PREFER_EXTENDED` | `false` | Prefers an available extended cut over the standard release. |
+| `PIPELINE_PREFER_ALTERNATE` | `false` | Prefers the alternate G-8 cut at the end of Skypiea. |
+| `PIPELINE_FILTERS_INCLUDE` | empty | Processes only items matched by the include filters. |
+| `PIPELINE_FILTERS_EXCLUDE` | empty | Excludes items matched by the exclude filters. |
+| `PIPELINE_RETRY_INTERVAL` | `10` | Seconds before the pipeline runs again after a failure. |
 
-### 🔎 Filters
+### Filters
 
-`PIPELINE_FILTERS_INCLUDE` and `PIPELINE_FILTERS_EXCLUDE` are lists of 'filters' as a comma separated string. For example: `filter1,filter2,filter3`.
+`PIPELINE_FILTERS_INCLUDE` and `PIPELINE_FILTERS_EXCLUDE` accept comma-separated filters:
 
-Each filter can either match a specific season number, episode number or both. Meaning they can either be `Sxx`, `SxxExx` or `Exx`. For example `S01E06` would **match** only S01E06, whilst `S02` would **match** every episode in `S02`, and `E06` would **match** episode 6 of every season (don't ask why).
+- `S01` matches every episode in season/arc 1.
+- `S01E06` matches only episode 6 in season/arc 1.
+- `E06` matches episode 6 in every season/arc.
 
-This should give you flexibility to decide to only process whatever you want instead of the whole thing, by combining the `_INCLUDE` and `_EXCLUDE` filters.
-
-Here's a couple of setup examples:
-
-#### Only monitor S16E09 (Probably because you want to re-watch '32:54')
+Examples:
 
 ```dotenv
+# Monitor only S16E09
 PIPELINE_FILTERS_INCLUDE=S16E09
-```
 
-#### Monitor all seasons before Wano (S35)
-
-```dotenv
+# Monitor everything except S35 and S36
 PIPELINE_FILTERS_EXCLUDE=S35,S36
-```
 
-#### Monitor all first episodes of each Season
-
-```dotenv
-PIPELINE_FILTERS_INCLUDE=E01
-```
-
-#### Monitor all first episodes of each Season, except Wano and Egghead (35,36)
-
-```dotenv
+# Monitor the first episode of each season except S35 and S36
 PIPELINE_FILTERS_INCLUDE=E01
 PIPELINE_FILTERS_EXCLUDE=S35,S36
 ```
 
-In order for an episode to be Monitored (processed/downloaded/updated/etc), it has to match BOTH filters.
+An item must satisfy both the include and exclude rules to be processed.
 
----
+### Library
 
-### 🎬 Library (Common)
+Set `LIBRARY_MEDIA_SERVER` to `plex`, `jellyfin`, `emby`, or `none`. Local-folder mode creates files such as `.plexmatch`, `.nfo`, and poster images that can be used by a media server later.
 
-> [!IMPORTANT]  
-> Configure the Library (Media Server) type here.
->
-> `none` just organizes files in a folder, when metadata is updated it creates `.plexmatch`, `.nfo`, `poster.png` and all of the files that can be then used to automatically add metadata if imported to a Media Server at a later time.
->
-> `plex` Plex Media Server.
->
-> `jellyfin` Jellyfin Media Server.
->
-> `emby` Emby Media Server.
-
-| Library Variables | Default | Description |
+| Variable | Default | Description |
 | :--- | :--- | :--- |
-| ⭐ `LIBRARY_MEDIA_SERVER` | `plex` | Media server, can be either `plex`, `jellyfin`, `emby` or `none` if you just want to organize files in a folder. |
-| 🍤 `LIBRARY_SERIES_NAME` | `One Pace` | Name of the Series in Media Server. |
-| `LIBRARY_SERIES_FOLDER_NAME` | `$LIBRARY_SERIES_NAME` | Override if Media Server folder needs to be called differently from `LIBRARY_SERIES_NAME`. |
-| `LIBRARY_FILENAME_FORMAT` | `{SERIES_NAME} - S{ARC}E{EPISODE} - {TITLE}.mkv` | Overrides the filename each file should have, `{SERIES_NAME}`, `{ARC}`, `{EPISODE}` and `{TITLE}` will be replaced with values. `.mkv` automatically added if not specified. |
-| `LIBRARY_CREATE_SHOW_IF_NOT_FOUND` | `true` | If `false`, the app crashes if "LIBRARY_SERIES_NAME" isn't already a Show in your Media Server (useful for catching typos on first setup). Leave `true` to auto-create the show. |
+| `LIBRARY_MEDIA_SERVER` | `plex` | Library integration: `plex`, `jellyfin`, `emby`, or `none`. |
+| `LIBRARY_SERIES_NAME` | `One Pace` | Show name in the media server. |
+| `LIBRARY_SERIES_FOLDER_NAME` | value of `LIBRARY_SERIES_NAME` | Overrides the on-disk show-folder name. |
+| `LIBRARY_FILENAME_FORMAT` | `{SERIES_NAME} - S{ARC}E{EPISODE} - {TITLE}.mkv` | Output filename format. `.mkv` is appended if no extension is supplied. |
+| `LIBRARY_CREATE_SHOW_IF_NOT_FOUND` | `true` | Creates the show when it cannot be found. Set to `false` to fail on a missing or misspelled show name. |
+| `LIBRARY_NONE_ROOT_FOLDER` | `C:\\OnePacerr` | Root folder for `none` mode. Do not include `LIBRARY_SERIES_FOLDER_NAME`. This legacy default remains implemented. |
 
----
+### Plex
 
-### 📂 Library (Local Folder)
-
-| 💭 Library - None | Default | Description |
+| Variable | Default | Description |
 | :--- | :--- | :--- |
-| 🍤 `LIBRARY_NONE_ROOT_FOLDER` | `C:\\OnePacerr` | The root folder where your Library should be saved (Do not Include LIBRARY_SERIES_FOLDER_NAME). |
+| `PLEX_URL` | `http://localhost:32400` | Plex server URL. **Required for Plex.** |
+| `PLEX_TOKEN` | empty | [Plex authentication token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/). **Required for Plex.** |
+| `PLEX_LIBRARY_NAME` | `TV Shows` | Plex library name. |
+| `PLEX_SKIP_METADATA_FILES` | `true` | When `false`, also writes `.nfo` and poster files for Plex libraries. |
+| `PLEX_PLEXMATCH_EVEN_IF_NOT` | `false` | Writes `.plexmatch` even when another media-server mode is selected. |
+| `PLEX_API_TIMEOUT_SECONDS` | `120` | Maximum duration of an individual Plex API request. |
+| `PLEX_CIRCUIT_BREAKER_FAILURES` | `3` | Failed Plex operation sequences before the circuit opens. |
+| `PLEX_CIRCUIT_BREAKER_COOLDOWN_SECONDS` | `300` | Seconds to pause Plex requests after the circuit opens. |
+| `PLEX_BATCH_SIZE` | `20` | Maximum pending imports in one Plex batch. |
+| `PLEX_BATCH_DELAY_SECONDS` | `30` | Delay before processing a Plex import batch. |
+| `PLEX_SCAN_MIN_WAIT_SECONDS` | `30` | Minimum scan wait before completion monitoring continues. |
+| `PLEX_SCAN_TIMEOUT_SECONDS` | `600` | Maximum time to wait for scan completion before continuing safely. |
+| `PLEX_SCAN_VERIFY` | `true` | Enables Plex scan and episode-confirmation handling for imports. |
 
----
+Plex metadata is updated through its API because file-only metadata updates are unreliable. Set `PLEX_SKIP_METADATA_FILES=false` if the same files are also consumed by Jellyfin/Emby or if you want sidecar metadata for future migrations.
 
-### 🍊 Library (Plex Media Server)
+### Jellyfin
 
-| 💭 Library - Plex Variables | Default | Description |
+| Variable | Default | Description |
 | :--- | :--- | :--- |
-| ⭐ `PLEX_URL` | `http://localhost:32400` | Plex URL. |
-| ⭐ `PLEX_TOKEN` | _None_ | Your [Plex Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/). |
-| 🍤 `PLEX_LIBRARY_NAME` | `TV Shows` | Name of the Library in Plex. |
-| `PLEX_SKIP_METADATA_FILES` | `true` | If `false`, will generate `.nfo` and poster pngs even when Media Server is Plex. |
-| `PLEX_PLEXMATCH_EVEN_IF_NOT` | `false` | If `true`, will generate `.plexmatch` file even when using a different Media Sever. |
-| `PLEX_BATCH_SIZE` | `20` | Maximum number of pending imported episodes handled together in a Plex processing batch. |
-| `PLEX_BATCH_DELAY_SECONDS` | `30` | Delay used before processing a Plex import batch. |
-| `PLEX_SCAN_MIN_WAIT_SECONDS` | `30` | Minimum wait before Plex scan completion monitoring continues. |
-| `PLEX_SCAN_TIMEOUT_SECONDS` | `600` | Maximum time to wait for Plex scan completion before safely continuing. |
-| `PLEX_SCAN_VERIFY` | `true` | Enables Plex scan/episode confirmation handling for imported episodes. |
-| `PLEX_API_TIMEOUT_SECONDS` | `120` | Timeout used for Plex API requests before retry handling takes over. |
-| `PLEX_CIRCUIT_BREAKER_FAILURES` | `3` | Number of consecutive Plex failures before temporarily opening the circuit breaker. |
-| `PLEX_CIRCUIT_BREAKER_COOLDOWN_SECONDS` | `300` | Time the Plex circuit breaker remains open before API operations are attempted again. |
+| `JELLYFIN_URL` | `http://localhost:8096` | Jellyfin URL. **Required for Jellyfin.** |
+| `JELLYFIN_USERNAME` | empty | Jellyfin username. **Required for Jellyfin.** |
+| `JELLYFIN_PASSWORD` | empty | Jellyfin password. **Required for Jellyfin.** |
+| `JELLYFIN_LIBRARY_NAME` | `Shows` | Jellyfin library name. |
 
-**Note** on `PLEX_SKIP_METADATA_FILES`: Metadata for plex is set via API because doing so with just the files is unreliable at best. For this reason, when `LIBRARY_MEDIA_SERVER` is set to `plex`, by default (`PLEX_SKIP_METADATA_FILES=true`) OnePacerr will not generate the `.nfo` and the various `poster.png` on the Media Server folder.
+### Emby
 
-If you set `PLEX_SKIP_METADATA_FILES=false`, you can instead generate those files regardless. This is useful if you want to use the same media folder for multiple Media Servers, or if you just would rather create all of the metadata in case you ever change Media Server (it doesn't take that much space anyways).
-
----
-
-### 🪼 Library (Jellyfin)
-
-| 💭 Library - Jellyfin Variables | Default | Description |
+| Variable | Default | Description |
 | :--- | :--- | :--- |
-| ⭐ `JELLYFIN_URL` | `http://localhost:8096` | Jellyfin URL. |
-| ⭐ `JELLYFIN_USERNAME` | _None_ | Your Jellyfin username. |
-| ⭐ `JELLYFIN_PASSWORD` | _None_ | Your Jellyfin password. |
-| 🍤 `JELLYFIN_LIBRARY_NAME` | `Shows` | Name of the Library in Jellyfin. |
+| `EMBY_URL` | `http://localhost:8096` | Emby URL. **Required for Emby.** |
+| `EMBY_USERNAME` | empty | Emby username. **Required for Emby.** |
+| `EMBY_PASSWORD` | empty | Emby password. **Required for Emby.** |
+| `EMBY_LIBRARY_NAME` | `TV Shows` | Emby library name. |
 
----
+### Torrent clients
 
-### ✳️ Library (Emby)
-
-| 💭 Library - Emby Variables | Default | Description |
+| Variable | Default | Description |
 | :--- | :--- | :--- |
-| ⭐ `EMBY_URL` | `http://localhost:8096` | Emby URL. |
-| ⭐ `EMBY_USERNAME` | _None_ | Your Emby username. |
-| ⭐ `EMBY_PASSWORD` | _None_ | Your Emby password. |
-| 🍤 `EMBY_LIBRARY_NAME` | `TV Shows` | Name of the Library in Emby. |
+| `TORRENT_CLIENT` | `qbittorrent` | `qbittorrent`, `deluge`, `transmission`, or `utorrent`. |
+| `TORRENT_URL` | `http://localhost:8080` | Torrent-client API URL. **Required when downloads are enabled.** |
+| `TORRENT_USER` | empty | API/Web UI username. **Required when authentication is enabled.** |
+| `TORRENT_PASSWORD` | empty | API/Web UI password. **Required when authentication is enabled.** |
+| `TORRENT_CLIENT_TIMEOUT` | `10` | Request timeout in seconds. Increase for very large torrent queues. |
+| `TORRENT_CATEGORY_FORCE` | `false` | Corrects an existing torrent's category when it differs from `TORRENT_CATEGORY`. |
+| `TORRENT_CATEGORY` | `onepacerr` | Category used for new downloads and completed-torrent filtering. The legacy default is intentional. |
+| `TORRENT_CATEGORY_ONCE_COMPLETED` | `completed` | Category assigned after an imported torrent is processed. |
+| `TORRENT_CHECK_INTERVAL` | `60` | Seconds between completed-download checks. |
 
----
+Completed torrents are copied and renamed into the library, followed by media-server/metadata processing. Pacearr changes their category only after the relevant processing step completes.
 
-### 💾 Torrent
+### Path mappings
 
-| Torrent Variables | Default | Description |
+Path mappings translate the path reported by an external service into the path visible inside the Pacearr container.
+
+| Variable | Default | Description |
 | :--- | :--- | :--- |
-| 🍤 `TORRENT_CLIENT` | `qbittorrent` | Your torrent client between: `qbittorrent`, `deluge`, `transmisson` or `utorrent`. |
-| ⭐ `TORRENT_URL` | `http://localhost:8080` | Your torrent API URL. |
-| ⭐ `TORRENT_USER` | _None_ | Your torrent API username. |
-| ⭐ `TORRENT_PASSWORD` | _None_ | Your torrent API password. |
-| `TORRENT_CLIENT_TIMEOUT` | 10 | Seconds to wait for torrent client to respond to requests, increase if you have a LOT of torrents. |
-| `TORRENT_CATEGORY_FORCE` | `false` | If `true`, when trying to add a torrent also forces a category update if torrent already exists with a different category. |
-| `TORRENT_CATEGORY` | `onepacerr` | Creates downloads with this category, also filters completed torrents using this. |
-| `TORRENT_CATEGORY_ONCE_COMPLETED` | `completed` | After processing completed downloads, changes the torrent category to this one. |
-| `TORRENT_CHECK_INTERVAL` | 60 | Seconds between checking for completed downloads. |
+| `MOUNT_LIBRARY_MEDIA_SERVER` | empty | Library path as reported by Plex/Jellyfin/Emby. |
+| `MOUNT_LIBRARY_ONEPACERR` | empty | The same library path as visible to Pacearr. The legacy identifier is required. |
+| `MOUNT_DOWNLOADS_TORRENT` | empty | Download path as reported by the torrent client. |
+| `MOUNT_DOWNLOADS_ONEPACERR` | empty | The same download path as visible to Pacearr. The legacy identifier is required. |
 
----
+Do not rename `MOUNT_LIBRARY_ONEPACERR` or `MOUNT_DOWNLOADS_ONEPACERR`; those are the currently implemented environment-variable names.
 
-### 💿 Mount Path Mappings
+#### Windows Plex with Docker/Linux Pacearr
 
-| Mount Configuration Variables | Default | Description |
-| :--- | :--- | :--- |
-| `MOUNT_LIBRARY_MEDIA_SERVER` | _None_ | Use these mapping variables if your **Media Server** uses different mount paths than the OnePacerr container. |
-| `MOUNT_LIBRARY_ONEPACERR` | _None_ | Use these mapping variables if your **Media Server** uses different mount paths than the OnePacerr container. |
-| `MOUNT_DOWNLOADS_TORRENT` | _None_ | Use these mapping variables if your **Torrent Client** uses different mount paths than the OnePacerr container. |
-| `MOUNT_DOWNLOADS_ONEPACERR` | _None_ | Use these mapping variables if your **Torrent Client** uses different mount paths than the OnePacerr container. |
-
-If you're not sure what Mount Path Mappings are you can have a read on [TRaSH Guides](https://trash-guides.info/Radarr/Tips/Radarr-remote-path-mapping/).
-
-### 🪟 Windows Plex Compatibility
-
-This fork includes additional path handling for environments where OnePacerr runs in a Linux Docker container while Plex Media Server runs on Windows.
-
-For example, Plex may report the library as:
+If Plex runs on Windows but Pacearr runs in a Linux container, Plex may report:
 
 ```text
 M:\Anime
 ```
 
-while the same library is available to OnePacerr as:
+while Pacearr sees the same directory as:
 
 ```text
 /volume1/Media/Anime
 ```
 
-Configure the mapping with:
+Configure:
 
 ```dotenv
 MOUNT_LIBRARY_MEDIA_SERVER=M:\Anime
 MOUNT_LIBRARY_ONEPACERR=/volume1/Media/Anime
 ```
 
-`MOUNT_LIBRARY_MEDIA_SERVER` should match the path reported by Plex. `MOUNT_LIBRARY_ONEPACERR` should match the path visible from the OnePacerr container.
+`MOUNT_LIBRARY_MEDIA_SERVER` must match Plex's reported path. `MOUNT_LIBRARY_ONEPACERR` must match the path inside the Pacearr container. The same principle applies to torrent-client download paths. See [TRaSH Guides' remote path mapping explanation](https://trash-guides.info/Radarr/Tips/Radarr-remote-path-mapping/) for additional background.
 
+### Metadata
 
----
-
-### ℹ️ Metadata
-
-| Metadata Variables | Default | Description |
+| Variable | Default | Description |
 | :--- | :--- | :--- |
-| `METADATA_URL` | `https://onepacerr.com/api/v1` | Metadata API url (untested with different ones). |
-| `METADATA_LANGUAGE` | `en` | Currently only language supported. |
-| `METADATA_POSTER_SET` | `default` | Currently `default` equals `piratezekk`. There are also `official` and `mizzoufan523` available. If a set is missing a poster it uses `default`. |
-| `METADATA_DISABLE_WEBSOCKET` | `false` | If `true`, disables WebSocket mode. NOT recommended but available if your setup doesn't allow WebSockets or Long Polling (also supported). |
-| `METADATA_CHECK_INTERVAL` | 3600 | Ignored if METADATA_DISABLE_WEBSOCKET is false (default). Seconds between checking for new metadata. |
+| `METADATA_URL` | `https://onepacerr.com/api/v1` | Metadata API URL. The historical URL remains the implemented default. |
+| `METADATA_LANGUAGE` | `en` | Metadata language; currently only English is supported. |
+| `METADATA_POSTER_SET` | `default` | Poster set. `default` currently resolves to `piratezekk`; `official` and `mizzoufan523` are also available. |
+| `METADATA_DISABLE_WEBSOCKET` | `false` | Disables WebSocket/long-polling updates and uses interval checks instead. |
+| `METADATA_CHECK_INTERVAL` | `3600` | Poll interval in seconds when WebSocket mode is disabled. |
 
----
+Pacearr also uses the [One Pace public API](https://github.com/eltharynd/one-pace-api).
 
-## 🖼️ Poster Sets
+## Posters
 
-### 🔍 Previews
-
-You can preview all of the custom poster sets at the following links:
+Preview the bundled poster sets:
 
 - [piratezekk (default)](docs/poster%20previews/piratezekk.md#show)
 - [mizzoufan523](docs/poster%20previews/mizzoufan523.md#show)
 - [official](docs/poster%20previews/official.md#show)
 
-When a poster is missing from the set, you will se a placeholder in these preview.
+Missing artwork falls back to the default set. To add or update a set, see [POSTER-SETS.md](POSTER-SETS.md#how-to-contribute-to-poster-sets).
 
-When updating metadata, a missing poster results in falling back to default.
+## Reliability and recovery
 
-### 📥 Adding/Updating Sets
+Pacearr tracks processing in persistent, recoverable stages instead of assuming every episode can complete in one uninterrupted cycle:
 
-If you want to contribute to the posters or create an entire new set, first of all I love you, then please [read this](POSTER-SETS.md#how-to-contribute-to-poster-sets).
+```text
+Discovered
+    ↓
+Downloading
+    ↓
+Imported
+    ↓
+Media-server confirmation pending
+    ↓
+Metadata pending
+    ↓
+Cleanup pending
+    ↓
+Complete
+```
 
-## 🧪 Pipeline Diagram
+Pending operations can be reconciled during a later monitoring cycle or after a container restart. This protects unattended operation during:
 
-The following diagram synthesizes the pipeline:
+- media-server outages and scan delays
+- metadata API or WebSocket failures
+- interrupted imports
+- torrent-client and cleanup failures
+- temporary filesystem states
+- low available storage
+- application or container restarts
 
-![pipeline](docs/pipeline.png?cache=2)
+For Plex specifically, Pacearr can batch imports, issue one refresh per batch, wait for scanning, confirm episodes, and defer unresolved items to a future cycle. Metadata retries are stored separately so a confirmed import does not needlessly repeat the whole import workflow.
 
-## 📅 Roadmap
+## Roadmap
 
-- [X] **Support uTorrent** since [v1.7.5](https://github.com/eltharynd/OnePacerr/releases/tag/v1.7.5)
-- [X] **Support Transmission** since [v1.7.5](https://github.com/eltharynd/OnePacerr/releases/tag/v1.7.5)
-- [ ] **Docusaurus** documentation
-- [ ] **Rest API** Manual execution/status/configuration endpoints
-- [ ] **Support hard/softlinks**
-- [ ] **Support Libraries with multiple folders** (currently only gets the first result from API)
+Pacearr development is planned in stages:
 
-- [Request a new feature](https://github.com/eltharynd/OnePacerr/issues)
+- [x] Preserve the final OnePacerr-based foundation and historical documentation
+- [x] Establish Pacearr identity and the `0.1.0-alpha` development line
+- [x] Retain the automation engine and persistent reliability layer
+- [ ] Refine internal service boundaries and application API
+- [ ] Add persistent settings and safe configuration migration
+- [ ] Build the web UI foundation and system-health dashboard
+- [ ] Add library, arc, episode, queue, history, and log views
+- [ ] Add release monitoring and preference profiles
+- [ ] Add quality, language, Dub/Sub, Extended Cut, and fallback preferences
+- [ ] Add release comparison and upgrade management
+- [ ] Add media-server and download-client management
+- [ ] Expand migration tooling, automated tests, and release hardening
+- [ ] Publish a stable Pacearr release
 
-## 🔧 OnePacerr Beta Fork Credits
+See [ROADMAP.md](ROADMAP.md) for the evolving development plan.
 
-This fork is maintained by [DaHeroKozuki](https://github.com/DaHeroKozuki) and is built upon the original [OnePacerr](https://github.com/eltharynd/OnePacerr) project created by [eltharynd](https://github.com/eltharynd).
+## Migration from OnePacerr
 
-The original project structure, supported clients, supported media servers, documentation, artwork acknowledgements, and upstream project credits remain credited to their original authors and contributors.
+Pacearr `0.1.0-alpha` intentionally preserves compatibility with much of OnePacerr's environment-variable configuration and on-disk state model. This is why some active identifiers still contain the old project name.
 
-## 🤝 Credits & Acknowledgements
+Before testing a migration:
 
-This project wouldn't be possible without the incredible work of the community:
+1. Stop the existing container cleanly.
+2. Back up the Compose file, `.env`, persistent state directory, and quarantine directory.
+3. Keep all existing variable names unless the Pacearr release notes explicitly document a replacement.
+4. Change the image reference to `ghcr.io/daherokozuki/pacearr:v0.1.0-alpha` only when you are ready to test alpha software.
+5. Preserve volumes for `/data/state` and `/data/quarantine`.
+6. Review logs and validate path mappings before enabling unattended downloads or cleanup.
 
-- **[One Pace](https://onepace.net/en):** The incredible team behind the unofficial fan edits.
-- For the custom poster artwork sets:
-  - `piratezekk` (default) by **[/u/piratezekk](https://reddit.com/user/piratezekk)**.
-    - Name spelling normalization and new Elpbaph matching poster by **[@3](https://discord.com/invite/pacing)** from One Pace's Discord.
-  - `mizzoufan523` by **[/u/Mizzoufan523](https://reddit.com/user/Mizzoufan523)**.
-  - `official` by **[One Pace's Team](https://onepace.net/en)**
-- [One Pace public API](https://github.com/eltharynd/one-pace-api)
+In particular, continue using:
 
-## 💗 Support (One Pace, not me!)
+```dotenv
+MOUNT_LIBRARY_ONEPACERR=...
+MOUNT_DOWNLOADS_ONEPACERR=...
+STATE_DB=/data/state/onepacerr.db
+TORRENT_CATEGORY=onepacerr
+METADATA_URL=https://onepacerr.com/api/v1
+```
 
-Please **do not** donate to me for this tool.
+These names and defaults reflect the current code. Future migration work may replace them through a documented compatibility path; users should not invent replacements in advance.
 
-Instead, please show your support for the team
-doing the heavy lifting by backing **[One Pace](https://onepace.net)**.
+The complete historical README is preserved at [docs/legacy/ONEPACERR-README.md](docs/legacy/ONEPACERR-README.md).
 
-[Go Back up](#-table-of-contents)
+## Origins and attribution
+
+Pacearr began with [OnePacerr](https://github.com/eltharynd/OnePacerr), created by [eltharynd](https://github.com/eltharynd). OnePacerr supplied the original architecture and implementation for One Pace release discovery, downloading, library organization, metadata, poster handling, and Plex/Jellyfin/Emby integration.
+
+The fork that became Pacearr initially concentrated on operational reliability: persistent state, recovery after restarts, safer Plex processing, Docker improvements, and mixed Windows/Linux path handling. As the scope expanded toward release profiles, upgrade management, persistent settings, and a dedicated web UI, it became a distinct project.
+
+Pacearr would not exist without eltharynd's work and the contributions made to OnePacerr. The original project and its contributors retain full credit for that foundation. Repository history and the [legacy README](docs/legacy/ONEPACERR-README.md) are preserved so this lineage remains visible.
+
+## Contributing
+
+Issues and pull requests are welcome at [DaHeroKozuki/Pacearr](https://github.com/DaHeroKozuki/Pacearr).
+
+For local development, install dependencies and run the TypeScript compiler and development process in separate terminals:
+
+```bash
+npm install
+npx tsc -w
+```
+
+```bash
+npm run dev
+```
+
+When contributing poster artwork, follow [POSTER-SETS.md](POSTER-SETS.md#how-to-contribute-to-poster-sets) and retain the relevant artist attribution.
+
+## Credits and acknowledgements
+
+- **[One Pace](https://onepace.net/):** the team behind the One Pace fan edit
+- **[eltharynd](https://github.com/eltharynd):** creator of OnePacerr and the [One Pace public API](https://github.com/eltharynd/one-pace-api)
+- **[piratezekk](https://reddit.com/user/piratezekk):** default custom poster artwork
+- **[@3](https://discord.com/invite/pacing):** name normalization and the matching Elbaph poster contributed through the One Pace Discord community
+- **[Mizzoufan523](https://reddit.com/user/Mizzoufan523):** `mizzoufan523` poster artwork
+- **[One Pace](https://onepace.net/):** official poster set
+- all OnePacerr and Pacearr contributors
+
+Please do not donate to Pacearr's maintainer for this tool. If you want to support the people doing the underlying editing work, support [One Pace](https://onepace.net/).
+
+## License and disclaimer
+
+Pacearr is distributed under the [MIT License](LICENSE).
+
+Pacearr is an independent community project and is not affiliated with, endorsed by, or maintained by the One Pace team. Users are responsible for ensuring that their use of Pacearr, One Pace releases, torrent clients, and external services complies with the laws and requirements applicable to them.
+
+---
+
+<p align="center">
+  <strong>Pacearr</strong><br>
+  One Pace. Managed.
+</p>
