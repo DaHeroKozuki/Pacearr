@@ -22,14 +22,14 @@ import {
 } from './library.model.js'
 
 export class LibraryController {
-private mapMediaServerPath(filePath: string): string {
-return filePath
-.replace(
-environment.MOUNT_LIBRARY_MEDIA_SERVER,
-environment.MOUNT_LIBRARY_ONEPACERR,
-)
-.replaceAll('\\', '/')
-}
+	private mapMediaServerPath(filePath: string): string {
+		return filePath
+			.replace(
+				environment.MOUNT_LIBRARY_MEDIA_SERVER,
+				environment.MOUNT_LIBRARY_ONEPACERR,
+			)
+			.replaceAll('\\', '/')
+	}
 
 	private client: ILibraryController
 
@@ -90,8 +90,8 @@ environment.MOUNT_LIBRARY_ONEPACERR,
 		if (!file || pathAccordingToMediaServer) return file
 
 		// Stable build:
-		// Convert Media Server paths to the path visible inside OnePacerr.
-		// This is required when Plex runs on Windows but OnePacerr runs on Linux.
+		// Convert Media Server paths to the path visible inside Pacearr.
+		// This is required when Plex runs on Windows but Pacearr runs on Linux.
 		return this.mapMediaServerPath(file)
 	}
 
@@ -110,7 +110,7 @@ environment.MOUNT_LIBRARY_ONEPACERR,
 		const previousScan = this.scanLock
 
 		let releaseScan: () => void = () => {}
-		this.scanLock = new Promise<void>(resolve => {
+		this.scanLock = new Promise<void>((resolve) => {
 			releaseScan = resolve
 		})
 
@@ -119,30 +119,30 @@ environment.MOUNT_LIBRARY_ONEPACERR,
 		try {
 			let libraryFolder = resolveSeriesRootFolder(await this.getLibraryFolder())
 
-		mkdirSync(
-			`${path.resolve(`${this.mapMediaServerPath(libraryFolder)}`)}${path.sep}`,
-			{ recursive: true },
-		)
-
-		if (
-			this.client.libraryClient != 'plex' &&
-			environment.PLEX_PLEXMATCH_EVEN_IF_NOT
-		) {
-			let plexmatch = `show: ${environment.LIBRARY_SERIES_NAME}`
-			writeFileSync(
-				`${path.resolve(`${this.mapMediaServerPath(libraryFolder)}`)}${path.sep}.plexmatch`,
-				plexmatch,
+			mkdirSync(
+				`${path.resolve(`${this.mapMediaServerPath(libraryFolder)}`)}${path.sep}`,
+				{ recursive: true },
 			)
-		}
 
-		if (
-			this.client.libraryClient != 'plex' ||
-			!environment.PLEX_SKIP_METADATA_FILES
-		)
-			writeFileSync(
-				`${path.resolve(`${this.mapMediaServerPath(libraryFolder)}`)}${path.sep}tvshow.nfo`,
-				Context.metadata.getTVShowNFO(),
+			if (
+				this.client.libraryClient != 'plex' &&
+				environment.PLEX_PLEXMATCH_EVEN_IF_NOT
+			) {
+				let plexmatch = `show: ${environment.LIBRARY_SERIES_NAME}`
+				writeFileSync(
+					`${path.resolve(`${this.mapMediaServerPath(libraryFolder)}`)}${path.sep}.plexmatch`,
+					plexmatch,
+				)
+			}
+
+			if (
+				this.client.libraryClient != 'plex' ||
+				!environment.PLEX_SKIP_METADATA_FILES
 			)
+				writeFileSync(
+					`${path.resolve(`${this.mapMediaServerPath(libraryFolder)}`)}${path.sep}tvshow.nfo`,
+					Context.metadata.getTVShowNFO(),
+				)
 
 			await this.client.scanLibrary(folder, arc)
 		} finally {
@@ -154,7 +154,6 @@ environment.MOUNT_LIBRARY_ONEPACERR,
 		if (!this.client.waitForScanCompletion) return
 		await this.client.waitForScanCompletion()
 	}
-
 
 	async updateEpisodeMetadata(episode: EpisodeMetadata) {
 		if (

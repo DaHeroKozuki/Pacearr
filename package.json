@@ -1,6 +1,6 @@
 {
-	"name": "OnePacerr",
-	"version": "1.7.19",
+	"name": "Pacearr",
+	"version": "0.1.0-alpha",
 	"description": "",
 	"main": "dist/index.js",
 	"type": "module",

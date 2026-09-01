@@ -278,7 +278,7 @@ export class TorrentController {
 
 		Logger.info(``)
 		Logger.info(`##################################`)
-		Logger.info(`ONEPACERR STATE SUMMARY`)
+		Logger.info(`PACEARR STATE SUMMARY`)
 		Logger.info(`Complete: ${stateSummary.complete || 0}`)
 		Logger.info(`Plex Pending: ${stateSummary.plex_pending || 0}`)
 		Logger.info(`Metadata Pending: ${stateSummary.metadata_pending || 0}`)
@@ -604,7 +604,7 @@ export class TorrentController {
 		if (this.__startupReconciled) return
 
 		Logger.info(
-			`Reconciling persistent OnePacerr state before pipeline processing...`,
+			`Reconciling persistent Pacearr state before pipeline processing...`,
 		)
 
 		await this.restorePersistentState()
@@ -1380,7 +1380,7 @@ export class TorrentController {
 			let targetLibraryFile: TargetLibraryFile =
 				await Context.library.getTargetLibraryEpisodeFile(episode)
 
-			// FIX: Normalize Windows Plex paths when OnePacerr runs on Linux
+			// FIX: Normalize Windows Plex paths when Pacearr runs on Linux
 			const targetLibraryPath = targetLibraryFile.path
 				.replace(
 					environment.MOUNT_LIBRARY_MEDIA_SERVER,

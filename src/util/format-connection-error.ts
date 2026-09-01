@@ -18,7 +18,7 @@ export function formatConnectionError(
 
 	if (/localhost|127\.0\.0\.1/.test(url)) {
 		parts.push(
-			'hint: localhost is the OnePacerr container — use the Emby service hostname instead',
+			'hint: localhost is the Pacearr container — use the Emby service hostname instead',
 		)
 	}
 
