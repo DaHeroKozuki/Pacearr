@@ -25,4 +25,4 @@ You've done the hard part, I'll help you with the rest :)
 - [mizzoufan523)](docs/poster%20previews/mizzoufan523.md#show)
 - [official)](docs/poster%20previews/official.md#show)
 
-### [Back to home](README.md#onepacerr)
+### [Back to home](README.md#pacearr)
