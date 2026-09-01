@@ -50,12 +50,12 @@ Pacearr should remain:
 
 ### Remaining
 
-- [ ] Add `CHANGELOG.md`.
-- [ ] Add `CONTRIBUTING.md`.
-- [ ] Review and update `POSTER-SETS.md` branding where appropriate.
+- [x] Add `CHANGELOG.md`.
+- [x] Add `CONTRIBUTING.md`.
+- [x] Review and update `POSTER-SETS.md` branding where appropriate.
 - [ ] Review repository topics, description, and About section.
 - [ ] Review GitHub Issues/Discussions configuration.
-- [ ] Perform a repository-wide branding audit.
+- [x] Perform a repository-wide branding audit.
 - [ ] Perform a clean TypeScript/Docker build from the current `main`.
 - [ ] Verify GitHub Actions workflow syntax and GHCR publishing.
 - [ ] Publish the first Pacearr pre-release: `v0.1.0-alpha`.
