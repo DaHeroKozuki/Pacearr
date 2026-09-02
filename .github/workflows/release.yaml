@@ -1,21 +1,12 @@
 name: Release
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'src/**'
-      - 'package.json'
-      - 'Dockerfile'
-      - '.dockerignore'
-      - '.github/workflows/release.yaml'
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to release (e.g. 1.0.0). Leave blank to bump patch.'
-        required: false
-        default: ''
+        description: 'Version to release (e.g. 0.1.0-alpha)'
+        required: true
+        type: string
 
 jobs:
   release:
@@ -36,14 +27,10 @@ jobs:
         with:
           node-version: '24'
 
-      - name: Bump version
+      - name: Set release version
         id: version
         run: |
-          if [ -n "${{ github.event.inputs.version }}" ]; then
-            npm version ${{ github.event.inputs.version }} --no-git-tag-version
-          else
-            npm version patch --no-git-tag-version
-          fi
+          npm version "${{ github.event.inputs.version }}" --no-git-tag-version
           VERSION=$(node -p "require('./package.json').version")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
@@ -54,8 +41,8 @@ jobs:
           script: |
             const fs = require('fs');
 
-            const path = 'package.json';
-            const contents = fs.readFileSync(path, 'utf8');
+            const packageJson = fs.readFileSync('package.json', 'utf8');
+            const packageLock = fs.readFileSync('package-lock.json', 'utf8');
             const version = '${{ steps.version.outputs.version }}';
 
             const mutation = `
@@ -75,7 +62,8 @@ jobs:
                 message: { headline: `chore: bump version to v${version} [skip ci]` },
                 fileChanges: {
                   additions: [
-                    { path, contents: Buffer.from(contents).toString('base64') },
+                    { path: 'package.json', contents: Buffer.from(packageJson).toString('base64') },
+                    { path: 'package-lock.json', contents: Buffer.from(packageLock).toString('base64') },
                   ],
                 },
                 expectedHeadOid: context.sha,
@@ -95,6 +83,11 @@ jobs:
               ref: `refs/tags/v${version}`,
               sha: '${{ steps.commit.outputs.sha }}',
             });
+
+      - name: Checkout release commit
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ steps.commit.outputs.sha }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4
@@ -117,7 +110,6 @@ jobs:
           push: true
           tags: |
             ghcr.io/${{ github.repository_owner }}/pacearr:v${{ steps.version.outputs.version }}
-            ghcr.io/${{ github.repository_owner }}/pacearr:latest
           labels: |
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.version=${{ steps.version.outputs.version }}
@@ -128,4 +120,5 @@ jobs:
         with:
           tag_name: v${{ steps.version.outputs.version }}
           name: v${{ steps.version.outputs.version }}
+          prerelease: ${{ contains(steps.version.outputs.version, '-') }}
           generate_release_notes: true

@@ -1,0 +1,3 @@
+# GitHub Actions workflows
+.github/workflows/*.yml text eol=lf
+.github/workflows/*.yaml text eol=lf
