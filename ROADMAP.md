@@ -60,8 +60,8 @@ Pacearr should remain:
 - [x] Verify GitHub Actions workflow syntax and GHCR publishing.
 - [x] Publish the first Pacearr pre-release: `v0.1.0-alpha`.
 - [x] Publish the first Pacearr GHCR image.
-- [ ] Verify the documented migration path from OnePacerr Beta 1.3.
-- [ ] Mark Stage 1 complete.
+- [x] Verify the documented migration path from OnePacerr Beta 1.3.
+- [x] Mark Stage 1 complete.
 
 **Stage 1 completion criteria:**
 A new user should be able to land on the GitHub repository, understand what Pacearr is, understand what is already working, understand what is planned, see proper OnePacerr attribution, build the project successfully, and pull the first Pacearr alpha image.
