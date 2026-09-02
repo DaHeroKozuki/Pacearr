@@ -53,8 +53,8 @@ Pacearr should remain:
 - [x] Add `CHANGELOG.md`.
 - [x] Add `CONTRIBUTING.md`.
 - [x] Review and update `POSTER-SETS.md` branding where appropriate.
-- [ ] Review repository topics, description, and About section.
-- [ ] Review GitHub Issues/Discussions configuration.
+- [x] Review repository topics, description, and About section.
+- [x] Review GitHub Issues/Discussions configuration.
 - [x] Perform a repository-wide branding audit.
 - [ ] Perform a clean TypeScript/Docker build from the current `main`.
 - [ ] Verify GitHub Actions workflow syntax and GHCR publishing.
