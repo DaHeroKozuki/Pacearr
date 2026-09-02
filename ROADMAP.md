@@ -56,7 +56,7 @@ Pacearr should remain:
 - [x] Review repository topics, description, and About section.
 - [x] Review GitHub Issues/Discussions configuration.
 - [x] Perform a repository-wide branding audit.
-- [ ] Perform a clean TypeScript/Docker build from the current `main`.
+- [x] Perform a clean TypeScript/Docker build from the current `main`.
 - [ ] Verify GitHub Actions workflow syntax and GHCR publishing.
 - [ ] Publish the first Pacearr pre-release: `v0.1.0-alpha`.
 - [ ] Publish the first Pacearr GHCR image.
