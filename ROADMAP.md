@@ -57,9 +57,9 @@ Pacearr should remain:
 - [x] Review GitHub Issues/Discussions configuration.
 - [x] Perform a repository-wide branding audit.
 - [x] Perform a clean TypeScript/Docker build from the current `main`.
-- [ ] Verify GitHub Actions workflow syntax and GHCR publishing.
-- [ ] Publish the first Pacearr pre-release: `v0.1.0-alpha`.
-- [ ] Publish the first Pacearr GHCR image.
+- [x] Verify GitHub Actions workflow syntax and GHCR publishing.
+- [x] Publish the first Pacearr pre-release: `v0.1.0-alpha`.
+- [x] Publish the first Pacearr GHCR image.
 - [ ] Verify the documented migration path from OnePacerr Beta 1.3.
 - [ ] Mark Stage 1 complete.
 
