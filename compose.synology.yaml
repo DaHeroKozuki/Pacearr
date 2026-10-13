@@ -1,0 +1,21 @@
+version: '3.7'
+services:
+  pacearr-alpha:
+    build: .
+    image: pacearr:v1.0.0-local
+    container_name: pacearr-alpha-test
+    restart: unless-stopped
+    user: '1026:100'
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    ports:
+      - '49113:3000'
+    volumes:
+      - ./data/state:/data/state
+      - /volume1/Media/Anime:/Media/Anime:rw
+      - /volume1/Data/downloads:/Data/downloads:rw
+    tmpfs:
+      - /tmp

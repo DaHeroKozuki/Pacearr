@@ -1,0 +1,26 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {metadataIndex,matchMetadata,verifyCompletion,privateDelugeURL,delugeReader} from '../beta-readonly.mjs';
+const hash='a'.repeat(40),crc='90C45C25';
+const data={lastUpdate:'2026-10-13',arcs:[{arc:14,episodes:[{arc:14,episode:25,title:'Alternate',files:{alternate:{CRC32:crc,hash}}}]}]};
+const mapping=matchMetadata(metadataIndex(data),crc);
+const candidate={rel:'nested/video.mkv',size:1024};
+const torrent={is_finished:true,progress:100,total_remaining:0,total_size:1024,total_done:1024,state:'Seeding',save_path:'/downloads',files:[{path:'nested/video.mkv',size:1024,index:0}],file_progress:[1]};
+test('Uses authoritative arc/episode and alternate identity',()=>{assert.equal(mapping.season,14);assert.equal(mapping.episode,25);assert.equal(mapping.variant,'alternate');assert.equal(mapping.hash,hash)});
+test('Ambiguous and missing CRC fail closed',()=>{const copy=structuredClone(data);copy.arcs[0].episodes.push({...copy.arcs[0].episodes[0],episode:26});assert.equal(matchMetadata(metadataIndex(copy),crc).verified,false);assert.equal(matchMetadata(metadataIndex(data),'00000000').verified,false)});
+test('Completed exact file verifies; incomplete, wrong mount, bundles and size do not',()=>{assert.equal(verifyCompletion(mapping,torrent,candidate,'/downloads').verified,true);for(const patch of [{progress:1},{is_finished:false},{total_remaining:1},{save_path:'/other'},{file_progress:[0.5]},{state:'Error'},{files:[{path:'../video.mkv',size:1024,index:0}]}])assert.equal(verifyCompletion(mapping,{...torrent,...patch},candidate,'/downloads').verified,false);assert.equal(verifyCompletion({...mapping,bundle:true},torrent,candidate,'/downloads').verified,false);assert.equal(verifyCompletion(mapping,torrent,{...candidate,size:2048},'/downloads').verified,false)});
+test('Private endpoint restriction',()=>{assert.equal(privateDelugeURL('http://192.168.1.5:8112').pathname,'/json');for(const url of ['http://example.com','http://127.0.0.1','https://192.168.1.5','http://192.168.1.5/path'])assert.throws(()=>privateDelugeURL(url))});
+test('Deluge reader sends only authentication and read methods with exact hash',async()=>{const calls=[];const fake=async(u,opts)=>{const req=JSON.parse(opts.body);calls.push(req);return new Response(JSON.stringify({result:req.method==='core.get_torrent_status'?torrent:true}),{headers:req.method==='auth.login'?{'set-cookie':'_session_id=test; Path=/'}:{}})};const read=await delugeReader('http://192.168.1.5:8112','test',fake);assert.deepEqual(await read(hash),torrent);assert.deepEqual(calls.map(x=>x.method),['auth.login','web.connected','core.get_torrent_status']);assert.equal(calls[2].params[0],hash)});
+
+test('Episode zero is valid; negative, fractional and mismatched arc values fail',()=>{
+ const zero=structuredClone(data);zero.arcs[0].episodes[0].episode=0;
+ assert.equal(matchMetadata(metadataIndex(zero),crc).episode,0);
+ for(const patch of [{episode:-1},{episode:0.5},{arc:15}]){
+  const invalid=structuredClone(data);Object.assign(invalid.arcs[0].episodes[0],patch);assert.throws(()=>metadataIndex(invalid));
+ }
+});
+
+test('Authoritative bundles pass only the explicit worker mode and the same exact-file completion checks',()=>{const bundled={...mapping,bundle:true};assert.equal(verifyCompletion(bundled,torrent,candidate,'/downloads').verified,false);assert.equal(verifyCompletion(bundled,torrent,candidate,'/downloads',{allowBundles:true}).verified,true);assert.equal(verifyCompletion(bundled,{...torrent,file_progress:[0.5]},candidate,'/downloads',{allowBundles:true}).verified,false)});
+test('Torrent writer is opt-in and validates exact magnet hash and configured destination',async()=>{const calls=[];const fake=async(u,opts)=>{const req=JSON.parse(opts.body);calls.push(req);return new Response(JSON.stringify({result:req.method==='core.add_torrent_magnet'?hash:true}),{headers:req.method==='auth.login'?{'set-cookie':'_session_id=fixture; Path=/'}:{}})};const read=await delugeReader('http://192.168.1.5:8112','test',fake);await assert.rejects(read.add('magnet:?xt=urn:btih:'+hash,hash,'/downloads/One Pace'),/disabled/);const writer=await delugeReader('http://192.168.1.5:8112','test',fake,{allowAdd:true});await assert.rejects(writer.add('magnet:?xt=urn:btih:'+hash,'b'.repeat(40),'/downloads/One Pace'),/Invalid/);await writer.add('magnet:?xt=urn:btih:'+hash,hash,'/downloads/One Pace');const added=calls.filter(x=>x.method==='core.add_torrent_magnet');assert.equal(added.length,1);assert.equal(added[0].params[1].download_location,'/downloads/One Pace')});
+
+test('Removing a torrent record is opt-in and never requests data deletion',async()=>{const calls=[];const fake=async(u,o)=>{const r=JSON.parse(o.body);calls.push(r);return new Response(JSON.stringify({result:true}),{headers:r.method==='auth.login'?{'set-cookie':'_session_id=test; Path=/'}:{}})};const reader=await delugeReader('http://192.168.1.5:8112','test',fake);await assert.rejects(reader.removeRecord(hash),/disabled/);const writer=await delugeReader('http://192.168.1.5:8112','test',fake,{allowRemove:true});await writer.removeRecord(hash);assert.deepEqual(calls.find(x=>x.method==='core.remove_torrent').params,[hash,false])});

@@ -1,0 +1,18 @@
+services:
+  pacearr:
+    image: ghcr.io/daherokozuki/pacearr:v1.0.0
+    container_name: pacearr
+    restart: unless-stopped
+    user: "1000:1000"
+    read_only: true
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    ports: ["49113:3000"]
+    environment:
+      PACEARR_LIBRARY_ROOT: /library
+      PACEARR_DOWNLOAD_ROOT: /downloads
+    volumes:
+      - ./data/state:/data/state
+      - /path/to/library:/library:rw
+      - /path/to/downloads:/downloads:rw
+    tmpfs: [/tmp]

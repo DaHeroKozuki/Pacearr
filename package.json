@@ -1,50 +1,15 @@
 {
-	"name": "Pacearr",
-	"version": "0.1.0-alpha",
-	"description": "",
-	"main": "dist/index.js",
-	"type": "module",
-	"scripts": {
-		"build": "tsc",
-		"start": "node --enable-source-maps dist/index.js",
-		"dev": "nodemon --enable-source-maps dist/index.js",
-		"test": "vitest run",
-		"test:dev": "vitest",
-		"test:coverage": "vitest run --coverage"
-	},
-	"author": "eltharynd",
-	"license": "MIT",
-	"dependencies": {
-		"@ctrl/deluge": "^8.0.0",
-		"@ctrl/plex": "^6.0.0",
-		"@ctrl/qbittorrent": "^9.14.0",
-		"@ctrl/rtorrent": "^1.1.0",
-		"@ctrl/transmission": "^7.4.0",
-		"@ctrl/utorrent": "^6.6.2",
-		"@jellyfin/sdk": "^0.13.0",
-		"axios": "^1.18.1",
-		"body-parser": "^2.3.0",
-		"buffer-crc32": "^1.0.0",
-		"capitalize": "^2.0.4",
-		"class-transformer": "^0.5.1",
-		"class-validator": "^0.14.1",
-		"cors": "^2.8.6",
-		"dotenv": "^17.4.2",
-		"express": "^5.2.1",
-		"ez-ts-logger": "^1.0.11",
-		"multer": "^2.2.0",
-		"reflect-metadata": "^0.2.2",
-		"routing-controllers": "^0.11.3",
-		"socket.io-client": "^4.8.3",
-		"xml-js": "^1.6.11"
-	},
-	"devDependencies": {
-		"@types/express": "^5.0.6",
-		"@types/node": "^26.0.0",
-		"@types/node-json-logger": "^0.0.3",
-		"@vitest/coverage-v8": "^4.1.9",
-		"nodemon": "^3.1.14",
-		"typescript": "^6.x",
-		"vitest": "^4.1.9"
-	}
+  "name": "pacearr",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "One Pace library control with verified imports and upgrades",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test tests/*.test.mjs"
+  },
+  "engines": {
+    "node": ">=24"
+  }
 }

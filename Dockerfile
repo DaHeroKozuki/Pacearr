@@ -1,27 +1,12 @@
-FROM node:lts-alpine AS builder
-
-WORKDIR /app
-COPY package.json ./
-RUN npm i
-COPY src /app/src
-COPY tsconfig.json .
-RUN npm run build
-RUN npm prune --omit=dev
-
-
-FROM node:lts-alpine AS runner
-LABEL org.opencontainers.image.title="Pacearr"
+FROM node:24-alpine
+RUN apk add --no-cache ffmpeg
 LABEL org.opencontainers.image.source="https://github.com/DaHeroKozuki/Pacearr"
-LABEL org.opencontainers.image.description="Pacearr - self-hosted One Pace library management with resilient automation, recovery, and media-server integration."
-LABEL org.opencontainers.image.version="0.1.0-alpha"
-
+LABEL org.opencontainers.image.version="1.0.0"
 WORKDIR /app
-COPY package.json ./
-COPY posters ./posters
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/dist ./dist
-
-RUN touch .env
-
+COPY server.mjs beta-readonly.mjs beta-policy.mjs import-engine.mjs official-releases.mjs download-actions.mjs ./
+COPY web ./web
+RUN mkdir -p /data/state && chown -R node:node /data
+USER node
 EXPOSE 3000
-CMD ["npm", "start"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 CMD node -e "fetch('http://127.0.0.1:3000/api/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+CMD ["node","server.mjs"]
