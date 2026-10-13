@@ -1,9 +1,8 @@
 version: '3.7'
 services:
-  pacearr-alpha:
-    build: .
-    image: pacearr:v1.0.0-local
-    container_name: pacearr-alpha-test
+  pacearr:
+    image: ghcr.io/daherokozuki/pacearr:latest
+    container_name: pacearr
     restart: unless-stopped
     user: '1026:100'
     read_only: true

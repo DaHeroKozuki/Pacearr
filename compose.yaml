@@ -1,6 +1,6 @@
 services:
   pacearr:
-    image: ghcr.io/daherokozuki/pacearr:v1.0.0
+    image: ghcr.io/daherokozuki/pacearr:latest
     container_name: pacearr
     restart: unless-stopped
     user: "1000:1000"

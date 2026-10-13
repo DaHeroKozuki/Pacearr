@@ -1,4 +1,4 @@
-name: Release v1
+name: Pacearr Release
 on:
   push:
     branches: [main]
@@ -8,6 +8,11 @@ on:
       - 'tests/**'
       - 'Dockerfile'
       - 'package.json'
+      - 'compose*.yaml'
+      - 'scripts/**'
+      - 'README.md'
+      - 'RELEASE-NOTES.md'
+      - 'docs/screenshots/**'
       - '.github/workflows/release.yaml'
   workflow_dispatch:
 concurrency:
@@ -30,6 +35,8 @@ jobs:
           node --check server.mjs
           node --check web/app.js
           node --check web/manager.js
+      - name: Automation and live-action integration checks
+        run: npm run test:integration
       - name: Build and smoke test native image
         run: |
           docker build -t pacearr-smoke .
@@ -50,31 +57,32 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Publish v1 and replace rolling Alpha image
+      - name: Publish current container images
         uses: docker/build-push-action@v6
         with:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ghcr.io/daherokozuki/pacearr:v1.0.0
+            ghcr.io/daherokozuki/pacearr:v1.0.1
             ghcr.io/daherokozuki/pacearr:latest
             ghcr.io/daherokozuki/pacearr:alpha
           labels: |
             org.opencontainers.image.source=https://github.com/DaHeroKozuki/Pacearr
-            org.opencontainers.image.version=1.0.0
+            org.opencontainers.image.version=1.0.1
             org.opencontainers.image.revision=${{ github.sha }}
       - name: Package application update
         run: python3 scripts/package-release.py
-      - name: Publish first public v1 release
+      - name: Publish release and source bundle
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.0
+          tag_name: v1.0.1
           target_commitish: ${{ github.sha }}
-          name: Pacearr v1.0.0 — Library Control
+          name: Pacearr v1.0.1 — Set Sail
           body_path: RELEASE-NOTES.md
           make_latest: true
           prerelease: false
           files: |
-            dist/pacearr-v1.0.0.zip
+            dist/pacearr-v1.0.1.zip
+            dist/pacearr-v1.0.1-source.zip
             dist/SHA256SUMS

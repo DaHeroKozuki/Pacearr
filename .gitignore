@@ -11,3 +11,9 @@ quarantine/
 # Synology metadata
 @eaDir/
 **/@eaDir/
+
+# Private WebUI state and generated caches
+data/
+__pycache__/
+*.pyc
+*backup*/

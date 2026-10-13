@@ -565,13 +565,14 @@ if(path.startsWith('/api/setup/manage/')){
  if(path==='/api/setup/manage/authorise'&&req.method==='POST'){
   const b=await body(req),item=state.importQueue?.[b.key];if(workerRunning)return json(res,409,{error:'Import worker is active; retry shortly'});if(!item||item.status!=='awaiting-authorisation'||!item.replacementPath)return json(res,400,{error:'No verified replacement awaiting authorisation'});const hashed=await hashLibraryFile(cfg.libraryPath,item.replacementPath);item.approved=true;item.approvedCRC=item.sourceCRC;item.approvedPreviousCRC=hashed.crc;item.status='pending';await recordActivity('Episode replacement authorised; previous file will be preserved');return json(res,200,{ok:true});
  }
- if(path==='/api/setup/manage/status'&&req.method==='GET')return json(res,200,{profile,activity:state.activity||[],job:verificationJob,metadataUpdated:metadataCache?.lastUpdate||null,automation:state.autoImport!==false,imports:state.autoImport!==false,plexMutations:false,bulk:state.bulkVerification||null,workerError:state.workerError||null,officialUpdated:officialFetched||null,officialError,workerBusy:workerRunning,bulkBusy:bulkRunning,version:'1.0.0',metadataWarning:state.metadataWarning||null,manualGrabs:Object.values(state.manualGrabs||{}),acquisitions:Object.values(state.acquisitions||{}).filter(x=>x.root===cfg.downloadPath)});
+ if(path==='/api/setup/manage/status'&&req.method==='GET')return json(res,200,{profile,activity:state.activity||[],job:verificationJob,metadataUpdated:metadataCache?.lastUpdate||null,automation:state.autoImport!==false,imports:state.autoImport!==false,plexMutations:false,bulk:state.bulkVerification||null,workerError:state.workerError||null,officialUpdated:officialFetched||null,officialError,workerBusy:workerRunning,bulkBusy:bulkRunning,version:'1.0.1',metadataWarning:state.metadataWarning||null,manualGrabs:Object.values(state.manualGrabs||{}),acquisitions:Object.values(state.acquisitions||{}).filter(x=>x.root===cfg.downloadPath)});
  if(path==='/api/setup/manage/profile'&&req.method==='PUT'){
   if(workerRunning||(!bulkRunning&&verificationJob?.status==='running'))return json(res,409,{error:'Wait for the active verification/import job before changing the profile'});
   const b=await body(req);if(Object.keys(b).some(k=>!Object.hasOwn(defaultProfile,k)||(['minimumQuality','targetQuality'].includes(k)?![720,1080].includes(b[k]):k==='maxConcurrentDownloads'?(!Number.isInteger(b[k])||b[k]<1||b[k]>10):k==='language'?!['subbed','dubbed','both'].includes(b[k]):typeof b[k]!=='boolean'))||(b.minimumQuality??profile.minimumQuality)>(b.targetQuality??profile.targetQuality))return json(res,400,{error:'Unsupported release preference'});
   state.betaProfile={...profile,...b};if(!bulkRunning)verificationJob=null;await recordActivity('Release preferences saved; eligible imports follow the profile');return json(res,200,{ok:true,profile:state.betaProfile});
  }
  if(path==='/api/setup/manage/library'&&req.method==='POST'){
+  const request=await body(req);
   const check=await pathCheck('library',cfg.libraryPath);if(!check.ok)return json(res,200,{ok:false,error:check.message});
   const scan=await scanTree(await realpath(cfg.libraryPath));let metadataError='';
   try{await loadBetaMetadata(cfg)}catch(e){metadataError=e.message}
@@ -586,7 +587,7 @@ if(path.startsWith('/api/setup/manage/')){
    if(rows.some(r=>r.season===arc.arc&&r.episode===ep.episode))continue;
    rows.push({season:arc.arc,episode:ep.episode,title:ep.title,present:false,status:arc.arc===0&&!profile.includeSpecials?'excluded-special':'missing',preferred:preferredRelease(ep,profile)?.variant||null});
   }
-  await recordActivity(`Library refreshed: ${scan.files.length} video files inspected`);
+  if(request.silent!==true)await recordActivity(`Library refreshed: ${scan.files.length} video files inspected`);
   return json(res,200,{ok:true,rows,videoCount:scan.files.length,metadataError,verifiedCount:rows.filter(x=>x.present&&x.verification).length,metadataUpdated:metadataCache?.lastUpdate||null,checksumPolicy:profile.skipVerifyPresent?'Beta skips verification unless its variant override applies':'Beta verifies present files'});
  }
  if(path==='/api/setup/manage/downloads'&&req.method==='POST'){
