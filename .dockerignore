@@ -6,5 +6,6 @@
 !official-releases.mjs
 !download-actions.mjs
 !torrent-metadata.mjs
+!episode-mapping.mjs
 !web/
 !web/**

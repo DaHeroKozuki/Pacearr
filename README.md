@@ -6,7 +6,7 @@
 
 **One Pace library automation, built for self-hosters.**
 
-[![Version](https://img.shields.io/badge/version-1.1.1-38bdf8?style=flat-square)](https://github.com/DaHeroKozuki/Pacearr/releases)
+[![Version](https://img.shields.io/badge/version-1.1.2-38bdf8?style=flat-square)](https://github.com/DaHeroKozuki/Pacearr/releases)
 [![GitHub Packages](https://img.shields.io/badge/ghcr.io-daherokozuki%2Fpacearr-blue?style=flat-square&logo=github)](https://github.com/DaHeroKozuki/Pacearr/pkgs/container/pacearr)
 [![GitHub Release](https://img.shields.io/github/v/release/DaHeroKozuki/Pacearr?include_prereleases&style=flat-square)](https://github.com/DaHeroKozuki/Pacearr/releases)
 [![GitHub Issues](https://img.shields.io/github/issues/DaHeroKozuki/Pacearr?style=flat-square)](https://github.com/DaHeroKozuki/Pacearr/issues)
@@ -315,6 +315,13 @@ Only private-network HTTP IP endpoints are currently accepted for Deluge/Plex co
 
 ## Reliability and recovery
 
+### Recover files already on disk
+
+Pacearr discovers video files inside your configured Download path even when their torrent is no longer in Deluge. These appear in Awaiting action as untracked files. **Import matched missing files** offers suggested episode assignments for your review; confirm that downloading has finished before importing. Pacearr checks source stability, probes the media and verifies the copied checksum, while retaining the source. Numbered custom cuts are suggestions, not authoritative release proof. Older cuts may split episodes differently, so a title or chapter-range hint alone never authorises an automatic replacement.
+
+Automatic missing-episode requests preserve retry deadlines, attempt counts and cancellations across checks. Verified torrent metadata is cached in persistent state; a verified Deluge WebUI metadata retrieval fallback is available. If retrieval fails, Activity identifies the source and HTTP, DNS or TLS error. A confirmed local import retires obsolete automatic missing requests for that episode.
+
+
 Verification is persistent. A saved CRC includes file size, modification/change timestamps and inode; unchanged records survive restarts and updates. New/changed files need fresh verification. The initial bulk job resumes interrupted work rather than discarding its progress.
 
 Imports check authoritative identity, completion, path containment, size, CRC and media/profile criteria. Copies are staged, synced and verified before publication. Replacements preserve `.pacearr-backup-*` and save a journal for restart recovery. At least **2 GiB free library space beyond the copy** is required.
@@ -367,6 +374,7 @@ Stop the worker before restoring an earlier image or application. Avoid replacin
 | Library management | Library/download views, profiles, persisted checksums and Activity |
 | Live automation | Verified imports, same-cut revisions, quality upgrades and explicit grabs |
 | `1.0.0` | Public WebUI runtime, automatic refresh and the ship-banner interface |
+| `1.1.2` | Persistent retry/cancel state, verified torrent metadata caching and fallback, untracked-file discovery and confirmed bulk recovery |
 | `1.1.1` | Selective bundles, exact selections, 480p and usable fallbacks, scoped download controls, optional labels and completed-download recovery |
 | `1.0.3` | Portable public Compose examples, configurable ports/UID/GID and deployment-independent documentation |
 | `1.0.2` | Separate Completed/Awaiting action views, visible grab queue, clear RPC errors and delayed-magnet duplicate protection |

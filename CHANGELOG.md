@@ -1,3 +1,14 @@
+# v1.1.2 — Reliable retries and local file recovery
+
+- Preserve automatic missing-grab jobs, retry deadlines, attempt counts and cancellations across worker cycles.
+- Report per-source DNS/TLS/HTTP/redirect failures; cache verified torrent metadata and support a verified Deluge WebUI retrieval fallback.
+- Discover regular untracked videos strictly within the configured download folder; keep them in review until explicit completion/episode confirmation.
+- Suggest canonical cut/episode identities, including numbered Shaved/Kuma filenames; bulk-import matched missing episodes with source stability and copy-checksum verification.
+- Retain installed episodes when reviewed downloads are unverified alternate copies; coverage hints never become automatic release verification.
+- Retire obsolete automatic missing grabs after confirmed local imports fill their slots.
+- Revoke untracked completion confirmation when source fingerprints change.
+- Add automatic-missing retry/cancellation and 19-file orphan recovery regression cases, plus browser confirmation checks.
+
 # v1.1.1 — Responsive download controls
 
 - Accept persistent Stop/Cancel controls while a file operation is active, report pending confirmation and prevent subsequent submissions/import starts.

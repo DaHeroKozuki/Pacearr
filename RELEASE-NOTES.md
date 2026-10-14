@@ -1,44 +1,40 @@
-# Pacearr v1.1.1 — Smarter downloads. Fewer blockers. 🚢
+# Pacearr v1.1.2 — Bring your remaining episodes home 🚢
 
-**Fill the gaps. Skip the extras. Keep control.** This update brings selective bundle downloading, usable release fallbacks and recovery for downloads that were previously stuck awaiting action. The glass-style control room stays familiar.
+**Reuse the files you have. Keep retries under control.** This update repairs repeated automatic missing-episode requests and brings untracked downloads into the control room, while keeping the familiar glass interface.
 
-![Pacearr control room](https://raw.githubusercontent.com/DaHeroKozuki/Pacearr/v1.1.1/docs/screenshots/overview.png)
+![Pacearr control room](https://raw.githubusercontent.com/DaHeroKozuki/Pacearr/v1.1.2/docs/screenshots/overview.png)
 
-## Download the episodes you choose
+## Reliable automation overnight
 
-Your Library selection carries into confirmation with an exact count. Optional additional upgrades are unchecked. Episodes sharing a torrent are grouped into one request; unneeded bundle files have zero download priority. Finished selected files can import while other files remain incomplete. Pause/resume selected downloads, cancel requests, clear pending grabs or stop all Pacearr downloads. Cancellations persist and source data is retained. Stop/Cancel requests are saved even during an active file operation; the UI reports pending confirmation while the current operation finishes.
+Automatic missing requests now retain their attempt counts, retry deadlines and cancellation state instead of being recreated each cycle. Requests sharing a bundle retain one bounded retry schedule. Confirmed local imports retire obsolete automatic missing requests for the same episode.
 
-## Bring completed downloads home
+Verified torrent-file metadata is cached in persistent state. When direct retrieval fails, Pacearr can use Deluge WebUI retrieval and inspect the exact torrent hash and file list before adding a paused torrent with selected file priorities. Activity reports per-source HTTP, DNS, TLS and redirect failures instead of a generic fetch failure. Unavailable metadata does not start an entire unselected bundle.
 
-The upgraded worker rechecks previous policy/metadata review entries without redownloading. Verified older/non-preferred versions can fill missing episodes. English audio or Japanese audio with English subtitles can serve as a usable language fallback. Choose a minimum of 480p, 720p or 1080p independently of your upgrade target; automatic downgrades are blocked.
+## Recover downloads without a Deluge entry
 
-Beta filename checksum aliases are recognised, and untagged files receive a cached content checksum. Language preferences are soft: a verified episode with audio can also import when preferred tracks/subtitles are unavailable or unconfirmed, with that limitation shown clearly. No-audio media still needs review. Copies and replacements use recovery journals, free-space checks and verified publication; previous replaced files are backed up. Unknown custom edits still need a confirmed episode assignment rather than guessed numbering. Recheck completed downloads and single/bulk manual imports provide the recovery controls.
+Video files already inside the configured Download path now appear even if their torrent is absent from Deluge. Awaiting action distinguishes these untracked files from live downloads. **Import matched missing files** presents suggested episode assignments, including numbered custom cuts, for bulk review.
 
-## Keep Deluge organised
+Confirm that the files are fully downloaded and the assignments are correct. Pacearr checks the source fingerprint, probes the media, computes its checksum and verifies the copy before publishing the library file. Original downloads are retained. Completion confirmation is revoked if the source changes.
 
-An optional label selector lets you refresh, create and verify labels using your saved encrypted Deluge connection. The selected label applies to new and existing Pacearr-managed torrents. Labels are not an import requirement. Pacearr does not configure file moves; an existing label’s move rule is reported before saving. Unrelated torrents are left alone.
+A suggestion is not authoritative release proof. Older cuts can split episodes differently from current metadata; unverified alternatives keep installed episodes intact and remain available for explicit review. This update does not blindly turn every missing metadata checksum into an automatic import.
 
-![Pacearr Downloads](https://raw.githubusercontent.com/DaHeroKozuki/Pacearr/v1.1.1/docs/screenshots/downloads.png)
+## Update
 
-Activity distinguishes manual grabs from automatic missing episodes, revisions and quality upgrades. Retries use delays and capped attempts; accepted torrents are not repeatedly submitted while awaiting visibility. Automation shows running/paused/blocked status and last/next checks. Library, overview and download outcomes refresh automatically.
-
-## Update your deployment
-
-Back up your persistent state first, then run from your deployment directory:
+Back up persistent state, then run from your existing deployment directory:
 
 ```sh
 docker compose -p pacearr -f compose.yaml pull pacearr
 docker compose -p pacearr -f compose.yaml up -d --no-build --no-deps --force-recreate pacearr
 ```
 
-Use `docker-compose` if your host has the older command. Keep your working Compose mounts, ports, private `.env` and `/data/state`. Refresh the browser once for the new controls. Saved credentials, checksums, activity and automation preferences are retained. Previously blocked completed files are reconsidered automatically when automation is enabled. A saved pause remains paused.
+Use `docker-compose` on older hosts. Keep existing mounts, ports, private configuration and `/data/state`. Refresh the browser once. Saved credentials, checksums, activity, automation preferences and pause decisions are retained. Verified completed files are reconsidered with automation enabled; untracked files require the confirmation described above.
 
-Images: `ghcr.io/daherokozuki/pacearr:v1.1.1`, `:latest` and `:alpha`, for amd64 and arm64. Application/source ZIPs and SHA256SUMS are attached.
+Images: `ghcr.io/daherokozuki/pacearr:v1.1.2`, `:latest` and `:alpha`, for amd64 and arm64. Application and full-source ZIPs plus SHA256SUMS are attached. Historical source and project documentation remain available.
 
-## Practical limits and validation
+## Validation
 
-Selective bundle acquisition needs verified torrent-file metadata. If the official Nyaa download and hash-cache fallback are unavailable, Pacearr reports a retryable error without starting the whole payload. BitTorrent piece boundaries can cause a small amount of neighbouring skipped-file data. Only a real NAS run can confirm each custom cut’s mapping and your Deluge/plugin configuration.
+The release workflow runs unit tests, isolated integration checks, portable Compose validation and a native Docker health test before publishing. Regression coverage includes automatic-missing retries and cancellations, selective shared bundles, restart persistence, source preservation and confirmed recovery of 19 untracked files. Local browser checks cover exact selections, confirmation requirements, refreshed outcomes and credential controls. Showcase images use synthetic data.
 
-The release workflow runs unit and isolated integration tests for import migration, checksum aliases, 480p/language fallbacks, partial-bundle completion, selective file priorities, shared-hash requests, label verification, scoped pause/cancel controls, restart persistence and source preservation, followed by Docker health checks before publishing. Local browser checks cover exact selections, unchecked optional upgrades, automatic refresh and desktop/mobile credential controls. Showcase screenshots use synthetic data.
+Actual media assignments, remote metadata availability and sustained automation still need verification on each deployment. Check Activity after enabling automation; review suggestions before confirming untracked files.
 
-[Setup and mount guide](https://github.com/DaHeroKozuki/Pacearr/blob/v1.1.1/README.md#getting-started) · [Source and project history](https://github.com/DaHeroKozuki/Pacearr) · [Join the community](https://discord.gg/u3zksrG8G6)
+[Setup and mounts](https://github.com/DaHeroKozuki/Pacearr/blob/v1.1.2/README.md#getting-started) · [Source and history](https://github.com/DaHeroKozuki/Pacearr) · [Community](https://discord.gg/u3zksrG8G6)

@@ -1,5 +1,6 @@
 import {pbkdf2Sync} from 'node:crypto';
-import {spawn} from 'node:child_process';import {mkdtemp,mkdir,writeFile,readFile,rm,realpath} from 'node:fs/promises';import {tmpdir} from 'node:os';import {resolve} from 'node:path';import assert from 'node:assert/strict';import {crcChunk} from '../beta-policy.mjs';
+import {spawn} from 'node:child_process';import {mkdtemp,mkdir,writeFile as rawWriteFile,rename,readFile,rm,realpath} from 'node:fs/promises';import {tmpdir} from 'node:os';import {resolve} from 'node:path';import assert from 'node:assert/strict';import {crcChunk} from '../beta-policy.mjs';
+async function writeFile(path,data,options){if(path.endsWith('/deluge.json')){const tmp=path+'.fixture-parent-'+process.pid;await rawWriteFile(tmp,data,options);await rename(tmp,path)}else await rawWriteFile(path,data,options)}
 const root=resolve(import.meta.dirname,'..'),temp=await realpath(await mkdtemp(tmpdir()+'/pacearr-v11-')),lib=temp+'/library',down=temp+'/downloads',state=temp+'/state',hash='a'.repeat(40),outside='b'.repeat(40),queued='c'.repeat(40);
 await mkdir(lib+'/One Pace',{recursive:true});await mkdir(down+'/One Pace',{recursive:true});await mkdir(down+'/Other',{recursive:true});await mkdir(state);
 const crc=b=>((crcChunk(b)^0xffffffff)>>>0).toString(16).toUpperCase().padStart(8,'0'),bytes=[Buffer.from('old release'),Buffer.from('alias release'),Buffer.from('untagged release')],names=['Old ['+crc(bytes[0])+'].mkv','Alias [ABCDEF00].mkv','No checksum.mkv'];for(let i=0;i<3;i++)await writeFile(down+'/One Pace/'+names[i],bytes[i]);

@@ -69,25 +69,25 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ghcr.io/daherokozuki/pacearr:v1.1.1
+            ghcr.io/daherokozuki/pacearr:v1.1.2
             ghcr.io/daherokozuki/pacearr:latest
             ghcr.io/daherokozuki/pacearr:alpha
           labels: |
             org.opencontainers.image.source=https://github.com/DaHeroKozuki/Pacearr
-            org.opencontainers.image.version=1.1.1
+            org.opencontainers.image.version=1.1.2
             org.opencontainers.image.revision=${{ github.sha }}
       - name: Package application update
         run: python3 scripts/package-release.py
       - name: Publish release and source bundle
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.1.1
+          tag_name: v1.1.2
           target_commitish: ${{ github.sha }}
-          name: Pacearr v1.1.1 — Smarter Downloads & Import Recovery
+          name: Pacearr v1.1.2 — Reliable Retries & Local File Recovery
           body_path: RELEASE-NOTES.md
           make_latest: true
           prerelease: false
           files: |
-            dist/pacearr-v1.1.1.zip
-            dist/pacearr-v1.1.1-source.zip
+            dist/pacearr-v1.1.2.zip
+            dist/pacearr-v1.1.2-source.zip
             dist/SHA256SUMS
