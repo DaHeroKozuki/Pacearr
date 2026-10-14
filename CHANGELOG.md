@@ -1,3 +1,9 @@
+# v1.1.1 — Responsive download controls
+
+- Accept persistent Stop/Cancel controls while a file operation is active, report pending confirmation and prevent subsequent submissions/import starts.
+- Bound torrent-metadata acquisition work per worker cycle so unavailable bundles do not monopolise the worker.
+- Includes the complete v1.1.0 feature update and Docker build-context verification.
+
 # v1.1.0 — Smarter downloads and import recovery
 
 - Preserve exact Library selections; optional upgrades start unchecked.
