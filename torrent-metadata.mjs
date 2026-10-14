@@ -1,0 +1,20 @@
+import {createHash} from 'node:crypto';
+export function decodeTorrent(bytes,expectedHash){
+ const data=Buffer.from(bytes);if(!data.length||data.length>8*1024*1024)throw Error('Invalid torrent metadata size');let pos=0,infoStart,infoEnd,nodes=0;
+ function parse(depth=0){if(depth>40||++nodes>100000)throw Error('Torrent metadata too complex');const c=data[pos];if(c===105){const end=data.indexOf(101,++pos);if(end<0)throw Error('Invalid torrent integer');const value=Number(data.subarray(pos,end).toString());if(!Number.isSafeInteger(value)||value<0)throw Error('Invalid torrent integer');pos=end+1;return value}if(c===108){pos++;const out=[];while(data[pos]!==101){if(pos>=data.length)throw Error('Truncated torrent list');out.push(parse(depth+1))}pos++;return out}if(c===100){pos++;const out=Object.create(null);while(data[pos]!==101){if(pos>=data.length)throw Error('Truncated torrent dictionary');const key=parse(depth+1);if(!Buffer.isBuffer(key))throw Error('Invalid torrent key');const name=key.toString();if(Object.hasOwn(out,name))throw Error('Duplicate torrent key');const start=pos;out[name]=parse(depth+1);if(depth===0&&name==='info'){infoStart=start;infoEnd=pos}}pos++;return out}const colon=data.indexOf(58,pos);if(colon<0||colon-pos>10)throw Error('Invalid torrent string');const text=data.subarray(pos,colon).toString();if(!/^\d+$/.test(text))throw Error('Invalid torrent string');const len=Number(text);pos=colon+1;if(pos+len>data.length)throw Error('Truncated torrent string');const out=data.subarray(pos,pos+len);pos+=len;return out}
+ const root=parse();if(pos!==data.length||infoStart===undefined)throw Error('Invalid torrent info dictionary');const hash=createHash('sha1').update(data.subarray(infoStart,infoEnd)).digest('hex');if(hash!==expectedHash.toLowerCase())throw Error('Torrent metadata hash differs from authoritative release');const info=root.info;
+ const text=x=>{if(!Buffer.isBuffer(x))throw Error('Invalid torrent path');const value=x.toString('utf8');if(!value||value==='.'||value==='..'||/[\\/\x00]/.test(value))throw Error('Unsafe torrent path');return value},name=text(info['name.utf-8']||info.name);
+ const files=info.files?info.files.map((f,index)=>({index,path:[name,...(f['path.utf-8']||f.path).map(text)].join('/'),size:f.length})):[{index:0,path:name,size:info.length}];if(!files.length||files.length>10000||files.some(f=>!Number.isSafeInteger(f.size)||f.size<0))throw Error('Invalid torrent file lengths');return {hash,files,base64:data.toString('base64')};
+}
+export async function fetchTorrentMetadata(hash,nyaaURL,fetcher=fetch){
+ if(!/^[a-f0-9]{40}$/i.test(hash))throw Error('Invalid torrent identity');const urls=[];
+ if(typeof nyaaURL==='string'&&/^https:\/\/nyaa\.si\/view\/\d+$/.test(nyaaURL))urls.push(nyaaURL.replace('/view/','/download/')+'.torrent');
+ urls.push('https://itorrents.org/torrent/'+hash.toUpperCase()+'.torrent');let last;
+ for(const url of urls){try{const response=await fetcher(url,{redirect:'error',signal:AbortSignal.timeout(12000)});if(!response.ok)throw Error('Torrent metadata HTTP '+response.status);let size=0,chunks=[];for await(const chunk of response.body){size+=chunk.length;if(size>8*1024*1024)throw Error('Torrent metadata too large');chunks.push(chunk)}return decodeTorrent(Buffer.concat(chunks),hash)}catch(e){last=e}}
+ throw Error('Bundle file metadata unavailable; no payload started. Retry later: '+last.message);
+}
+export function selectTorrentFiles(files,index,requests,matchMetadata){
+ const priorities=files.map(()=>0),matched=new Set();for(const f of files){const crc=/\[([a-f0-9]{8})\](?=\.[^.]+$)/i.exec(f.path)?.[1],mapping=matchMetadata(index,crc);if(mapping.verified&&requests.some(r=>r.hash===mapping.hash&&r.season===mapping.season&&r.episode===mapping.episode)){priorities[f.index]=1;matched.add(mapping.season+':'+mapping.episode)}}
+ if(files.length===1&&requests.length===1){priorities[0]=1;matched.add(requests[0].season+':'+requests[0].episode)}
+ if(!matched.size)throw Error('Requested episodes could not be identified in torrent files; no payload started');return {priorities,matched:[...matched]};
+}

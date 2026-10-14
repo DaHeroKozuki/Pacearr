@@ -1,5 +1,5 @@
 import {spawn} from 'node:child_process';
-import {open,realpath,lstat,mkdir,link,unlink,statfs} from 'node:fs/promises';
+import {open,realpath,lstat,mkdir,link,unlink,statfs,access} from 'node:fs/promises';
 import {constants} from 'node:fs';
 import {resolve,relative,isAbsolute,dirname,join,basename} from 'node:path';
 import {randomBytes} from 'node:crypto';
@@ -11,7 +11,7 @@ export function scopedTorrents(torrents,root){
   for(const f of t.files){if(typeof f.path!=='string'||isAbsolute(f.path)||f.path.includes('\\')||f.path.split('/').includes('..'))continue;
    const full=resolve(t.save_path,f.path);if(!isWithin(root,full)||! /\.(mkv|mp4|m4v|avi|mov|ts|m2ts)$/i.test(f.path))continue;
    const progress=Array.isArray(t.file_progress)&&Number.isFinite(t.file_progress[f.index])?t.file_progress[f.index]*100:null;
-   rows.push({key:hash.toLowerCase()+'|'+relative(root,full),hash:hash.toLowerCase(),path:relative(root,full),name:basename(f.path),full,size:f.size,state:t.state||'Unknown',progress,torrent:t});
+   rows.push({key:hash.toLowerCase()+'|'+relative(root,full),hash:hash.toLowerCase(),path:relative(root,full),name:basename(f.path),full,size:f.size,state:t.state||'Unknown',progress,selected:!Array.isArray(t.file_priorities)||t.file_priorities[f.index]!==0,fileIndex:f.index,torrent:t});
   }
  }return rows;
 }
@@ -30,22 +30,26 @@ export async function probeMedia(path,executable=process.env.PACEARR_FFPROBE||'f
  });
 }
 export function matchesProfile(media,profile){
- const audio=media.audio||[],subs=media.subtitles||[],has=(values,codes)=>codes.some(x=>values.includes(x));
- const jp=has(audio,['jpn','ja']),en=has(audio,['eng','en']),enSubs=has(subs,['eng','en']);
+ const normalize=x=>({english:'eng',en:'eng',japanese:'jpn',ja:'jpn'})[String(x).toLowerCase()]||String(x).toLowerCase();
+ const audio=(media.audio||[]).map(normalize),subs=(media.subtitles||[]).map(normalize),jp=audio.includes('jpn'),en=audio.includes('eng'),enSubs=subs.includes('eng');
+ if(!Number.isFinite(media.height))return {ok:false,reason:'Resolution is unverified'};
  if(media.height<profile.minimumQuality)return {ok:false,reason:`Below minimum ${profile.minimumQuality}p quality`};
  if(media.height>profile.targetQuality)return {ok:false,reason:`Above selected ${profile.targetQuality}p target; review required`};
- if(profile.language==='subbed'&&!(jp&&enSubs))return {ok:false,reason:'Japanese audio and English embedded subtitles required'};
- if(profile.language==='dubbed'&&!en&&!(jp&&enSubs))return {ok:false,reason:'No supported English-dub or English-subbed release details'};
- if(profile.language==='both'&&!(jp&&enSubs))return {ok:false,reason:'Japanese audio and English subtitles required for the dual-audio fallback'};
- if(['dubbed','both'].includes(profile.language)&&!en)return {ok:true,reason:'English dub not available on this release; accepted English-subbed fallback'};
- return {ok:true,reason:media.height<profile.targetQuality?'Allowed fallback quality; upgrade to target when a verified release becomes available':'Quality and language preferences satisfied'};
+ if(!audio.length)return {ok:false,reason:'No audio stream was found; review required'};
+ let reason='Quality and language preferences satisfied';
+ if(profile.language==='both'&&!(jp&&en&&enSubs))reason=en?'Dual audio unavailable; accepted verified English-audio fallback':'English dub unavailable; accepted Japanese audio with English subtitles';
+ if(profile.language==='dubbed'&&!en)reason='English dub unavailable; accepted Japanese audio with English subtitles';
+ if(profile.language==='subbed'&&!(jp&&enSubs))reason='Japanese audio with English subtitles unavailable; accepted verified English-audio fallback';
+ if(!en&&!(jp&&enSubs))reason='Preferred audio/subtitles unavailable or unconfirmed; accepted verified episode fallback (language preference not guaranteed)';
+ if(media.height<profile.targetQuality)reason+=`; allowed ${media.height}p fallback, target ${profile.targetQuality}p`;
+ return {ok:true,reason};
 }
 export function targetFilename(mapping,extension='.mkv'){
  const title=String(mapping.title||'Episode').replace(/[<>:"/\\|?*\x00-\x1f]/g,' - ').replace(/\s+/g,' ').trim().slice(0,160)||'Episode';
  return `One Pace - S${String(mapping.season).padStart(2,'0')}E${String(mapping.episode).padStart(2,'0')} - ${title}${extension}`;
 }
 // Missing episodes only. Replacements require review and are never overwritten by this function.
-export async function importMissing({downloadRoot,sourceRel,libraryRoot,targetRel,expectedCRC,minimumFreeBytes=2*1024**3}){
+export async function importMissing({downloadRoot,sourceRel,libraryRoot,targetRel,expectedCRC,minimumFreeBytes=2*1024**3,journalMissing}){
  const down=await realpath(downloadRoot),lib=await realpath(libraryRoot);
  if(!isWithin(down,resolve(down,sourceRel))||!isWithin(lib,resolve(lib,targetRel)))throw Error('Import paths outside configured mounts');
  const source=await realpath(resolve(down,sourceRel));if(!isWithin(down,source))throw Error('Download resolves outside configured folder');
@@ -59,7 +63,7 @@ export async function importMissing({downloadRoot,sourceRel,libraryRoot,targetRe
  try{
   const before=await src.stat();if(!before.isFile())throw Error('Source is not a regular file');
   const free=await statfs(lib);if(Number(free.bavail)*Number(free.bsize)<before.size+minimumFreeBytes)throw Error('Insufficient library free space');
-  temporary=join(folder,'.pacearr-partial-'+randomBytes(12).toString('hex'));writer=await open(temporary,'wx',0o640);
+  await access(folder,constants.W_OK|constants.X_OK);temporary=join(folder,'.pacearr-partial-'+randomBytes(12).toString('hex'));if(journalMissing)await journalMissing({targetRel,partialRel:relative(lib,temporary),expectedCRC});writer=await open(temporary,'wx',0o640);
   const buffer=Buffer.alloc(256*1024);while(true){const {bytesRead}=await src.read(buffer,0,buffer.length,null);if(!bytesRead)break;let offset=0;while(offset<bytesRead){const {bytesWritten}=await writer.write(buffer,offset,bytesRead-offset,null);if(!bytesWritten)throw Error('Unable to copy source bytes');offset+=bytesWritten}}await writer.sync();await writer.close();writer=null;
   const copied=await hashLibraryFile(lib,relative(lib,temporary));const after=await src.stat();
   if(copied.size!==before.size||before.size!==after.size||before.mtimeMs!==after.mtimeMs||before.ctimeMs!==after.ctimeMs||copied.crc.toUpperCase()!==expectedCRC.toUpperCase())throw Error('Copied file checksum or source stability failed');
@@ -93,4 +97,11 @@ export async function recoverReplacement(libraryRoot,journal){
  const existing=await lstat(target).catch(e=>{if(e.code==='ENOENT')return null;throw e});
  if(existing){const hash=await hashLibraryFile(lib,journal.targetRel);if(hash.crc===journal.newCRC){await cleanStage();return 'imported'}if(hash.crc===journal.previousCRC){await cleanStage();return 'restored'}throw Error('Recovery target has an unexpected checksum; review required')}
  const old=await hashLibraryFile(lib,journal.backupRel);if(old.crc!==journal.previousCRC)throw Error('Recovery backup checksum differs');await link(backup,target);await cleanStage();return 'restored';
+}
+
+export async function recoverMissing(libraryRoot,journal){
+ const lib=await realpath(libraryRoot);if(!isWithin(lib,resolve(lib,journal.targetRel))||!isWithin(lib,resolve(lib,journal.partialRel))||dirname(journal.targetRel)!==dirname(journal.partialRel)||!/^\.pacearr-partial-[a-f0-9]{24}$/.test(basename(journal.partialRel)))throw Error('Invalid interrupted-copy journal');
+ const target=resolve(lib,journal.targetRel),folder=dirname(target);if(await realpath(folder)!==folder)throw Error('Unsafe recovery directory');let outcome='retry';
+ const present=await lstat(target).catch(e=>{if(e.code==='ENOENT')return null;throw e});if(present){if(!present.isFile()||present.isSymbolicLink())throw Error('Unsafe recovery destination');if((await hashLibraryFile(lib,journal.targetRel)).crc!==journal.expectedCRC)throw Error('Recovery destination checksum differs');outcome='imported'}
+ const partial=resolve(lib,journal.partialRel),info=await lstat(partial).catch(e=>{if(e.code==='ENOENT')return null;throw e});if(info){if(!info.isFile()||info.isSymbolicLink())throw Error('Unsafe interrupted copy');await unlink(partial)}return outcome;
 }

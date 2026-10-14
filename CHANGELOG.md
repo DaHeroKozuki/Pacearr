@@ -1,3 +1,16 @@
+# v1.1.0 — Smarter downloads and import recovery
+
+- Preserve exact Library selections; optional upgrades start unchecked.
+- Group shared torrent requests and select only needed bundle files before payload downloading.
+- Verify and import completed individual files, independent of whole-torrent completion.
+- Recognise Beta filename CRC aliases and compute/cache untagged content checksums.
+- Accept verified available older variants and English/subbed language fallbacks for missing episodes; support 480p minimum and block automatic downgrades.
+- Add scoped pause/resume/cancel, clear pending queue, persistent stop state and cancellation suppression.
+- Add optional Deluge label discovery, creation, verification and existing/new managed torrent assignment.
+- Recheck prior blocked files on upgrade; expose manual recheck and preserve saved pause/ignore decisions.
+- Journal interrupted missing imports as well as replacements; retain source data, backups and checksum state.
+- Expand unit, integration and browser checks; update generic documentation, release details and showcase images.
+
 # v1.0.3 — Portable Setup
 
 Public configuration is deployment-independent: explicit host-path variables, configurable WebUI port and UID:GID, portable NAS examples and parameterized migration/cleanup helpers. No live settings are modified by the image update.

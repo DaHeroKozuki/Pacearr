@@ -6,7 +6,7 @@
 
 **One Pace library automation, built for self-hosters.**
 
-[![Version](https://img.shields.io/badge/version-1.0.3-38bdf8?style=flat-square)](https://github.com/DaHeroKozuki/Pacearr/releases)
+[![Version](https://img.shields.io/badge/version-1.1.0-38bdf8?style=flat-square)](https://github.com/DaHeroKozuki/Pacearr/releases)
 [![GitHub Packages](https://img.shields.io/badge/ghcr.io-daherokozuki%2Fpacearr-blue?style=flat-square&logo=github)](https://github.com/DaHeroKozuki/Pacearr/pkgs/container/pacearr)
 [![GitHub Release](https://img.shields.io/github/v/release/DaHeroKozuki/Pacearr?include_prereleases&style=flat-square)](https://github.com/DaHeroKozuki/Pacearr/releases)
 [![GitHub Issues](https://img.shields.io/github/issues/DaHeroKozuki/Pacearr?style=flat-square)](https://github.com/DaHeroKozuki/Pacearr/issues)
@@ -44,6 +44,21 @@ Originally derived from [OnePacerr](https://github.com/eltharynd/OnePacerr), Pac
 - [Contributing](#contributing)
 - [Credits and acknowledgements](#credits-and-acknowledgements)
 - [License and disclaimer](#license-and-disclaimer)
+
+## New in v1.1 — download only what you need
+
+**Choose episodes once. Let Pacearr handle the rest.** Selected Library episodes carry into confirmation with an exact count. Optional upgrades remain unchecked. Requests for several episodes in one bundle share a single torrent, with unrelated files set to *Do not download*.
+
+- **480p through 1080p:** set a minimum independently of your upgrade target. Verified English-audio or English-subbed fallbacks can fill gaps; automatic quality downgrades remain blocked.
+- **Per-file imports:** completed selected episodes can reach the library while the rest of their torrent remains incomplete.
+- **Take control:** pause/resume selected torrents, cancel requests, clear the pending queue or stop all Pacearr downloads. Cancellation keeps source data and prevents automatic requeue until you explicitly resume/re-grab it.
+- **Optional Deluge labels:** refresh, create and verify a label in Settings. Apply it to new and existing managed torrents; no label is required for import. Existing label move rules must be disabled before selecting the label.
+- **Recover existing downloads:** the first upgraded startup rechecks previously blocked files. A Recheck completed downloads button repeats the check without downloading again, respecting saved pause/ignore decisions.
+- **Readable outcomes:** Activity identifies manual requests, missing episodes, revisions and quality upgrades. Saved checksums and copy/replacement recovery journals persist across updates.
+
+Bundle metadata is verified against the authoritative torrent hash before selected payloads start. Pacearr uses an official Nyaa torrent link when available, with a hash-based torrent-cache fallback. If metadata cannot be obtained or files cannot be mapped, the request reports the cause and retries with delays instead of downloading the whole bundle. BitTorrent may fetch small amounts of adjacent data where selected and skipped files share pieces.
+
+A checksum missing from a filename is no longer an automatic rejection: Pacearr computes and caches the content checksum, including Beta filename aliases. Unknown custom cuts still need an explicit episode assignment when neither checksum nor authoritative release evidence identifies the episode. Review/Import provides that action; it never guesses a custom cut’s destination from its local numbering. Language preferences are soft: a verified episode with audio can also import when preferred tracks/subtitles are unavailable or unconfirmed, with that limitation shown clearly. No-audio media still needs review. Verified older releases fill missing slots, while replacements preserve better installed versions and retain the previous file as a backup.
 
 ## What Pacearr does
 
@@ -91,7 +106,7 @@ Activity shows current failed-grab counts separately from history, offers severi
 | Automation | Start/pause automatic imports and configured revision/upgrade acquisition |
 | Downloads | Watch scoped torrent progress; review, recheck, ignore, import or delete completed files |
 | Manual imports | Assign unsupported cuts to authoritative episode targets, singly or in bulk |
-| Profiles | Prefer standard/extended/alternate cuts, 720p/1080p targets and simple audio/subtitle preferences |
+| Profiles | Prefer standard/extended/alternate cuts, 480p/720p/1080p minimums and targets and simple audio/subtitle preferences |
 | Activity | Search persistent outcomes and export history |
 | Settings | Manage paths, private-network connection settings and encrypted credentials |
 | System | Check saved paths, reuse checksum records and open project/community links |
@@ -114,7 +129,7 @@ Current release metadata → profile decision → Deluge grab
 
 1. Pacearr maps current releases to season/episode identities using Beta metadata. Official hash-linked release details supply resolution, audio and subtitles where available.
 2. Grabs use your saved download folder. Existing torrent hashes are checked globally to avoid adding the same torrent again. The concurrency limit includes active downloads already in that folder.
-3. Import waits for complete torrent and file progress, exact path/size and a regular file within the configured folder. An incomplete or mismatched download cannot pass through automatically.
+3. Import waits for completed selected file progress (the whole torrent may remain incomplete), exact path/size and a regular file within the configured folder. An incomplete or mismatched download cannot pass through automatically.
 4. Computed CRC32 must match authoritative release identity. CRC32 is a content identity marker, not cryptographic proof of authenticity; a bracketed CRC in a filename alone is not enough.
 5. A copy is staged and verified before it becomes a library file. Upgrades preserve the old file and record a recovery journal. Sources remain in Downloads for seeding.
 6. Unsupported custom cuts require your episode assignment. Manual assignment is recorded separately from an official release identity; it does not invent authoritative metadata.
@@ -125,10 +140,10 @@ Current release metadata → profile decision → Deluge grab
 
 ## Quality, language and release profiles
 
-- **Quality:** the default minimum is 720p and upgrade target is 1080p. Verified upgrades can replace lower-quality installed files; automatic downgrades are blocked.
+- **Quality:** choose 480p, 720p or 1080p as the minimum and target; existing profiles keep their saved choices. The default minimum is 720p and upgrade target is 1080p. Verified upgrades can replace lower-quality installed files; automatic downgrades are blocked.
 - **Revisions:** a newly published edit with a new authoritative identity is a new release even at the same resolution. Matching current bytes are skipped.
 - **Cuts:** enabled alternate/extended preferences follow Beta precedence. Automatic revisions stay within the same cut; switching cuts requires explicit selection/approval.
-- **Language:** Subbed means Japanese audio with English subtitles; Dubbed prefers English audio; Both prefers English and Japanese audio plus English subtitles. Dubbed/Both accept an English-subbed fallback when a dub is unavailable. Bundled tracks are inspected together—no separate dub download is required.
+- **Language:** Subbed means Japanese audio with English subtitles; Dubbed prefers English audio; Both prefers English and Japanese audio plus English subtitles. Verified available audio can import as a fallback when preferred tracks are unavailable or unconfirmed; Activity explains the compromise. Bundled tracks are inspected together—no separate dub download is required.
 - **Missing episodes:** automatic missing-episode grabs are optional. Manual searches/grabs remain available while unattended automation is paused.
 - **Concurrency:** default three active downloads, adjustable from one to ten.
 
@@ -352,6 +367,7 @@ Stop the worker before restoring an earlier image or application. Avoid replacin
 | Library management | Library/download views, profiles, persisted checksums and Activity |
 | Live automation | Verified imports, same-cut revisions, quality upgrades and explicit grabs |
 | `1.0.0` | Public WebUI runtime, automatic refresh and the ship-banner interface |
+| `1.1.0` | Selective bundles, exact selections, 480p and usable fallbacks, scoped download controls, optional labels and completed-download recovery |
 | `1.0.3` | Portable public Compose examples, configurable ports/UID/GID and deployment-independent documentation |
 | `1.0.2` | Separate Completed/Awaiting action views, visible grab queue, clear RPC errors and delayed-magnet duplicate protection |
 | `1.0.1` | Clean deployment names, portable integration tests, complete source bundle and expanded documentation/gallery |

@@ -12,7 +12,7 @@ export function parseOfficialReleases(html){
   const magnet=block.match(/href="(magnet:[^"]+)"/)?.[1]?.replace(/&amp;/g,'&');let crc=null;
   if(magnet)try{const dn=new URL(magnet).searchParams.get('dn')||'';crc=/\[([a-f0-9]{8})\](?:\.[^.]+)?$/i.exec(dn)?.[1]?.toUpperCase()||null}catch{}
   const height=quality?Number(/(480|720|1080|2160)p/i.exec(quality)?.[1]):null;
-  if(!height||!audio||!crc)continue;
+  if(!height||!audio)continue;
   const nyaa=block.match(/href="(https:\/\/nyaa\.si\/view\/\d+)"/)?.[1]||null;
   const item={hash,crc,height,audio:codes(audio),subtitles:codes(subtitles),title:clean(block.match(/<h3[^>]*>([\s\S]*?)<\/h3>/)?.[1]||''),outdated:/\bOutdated\b/.test(clean(info)),officialURL:'https://onepace.net/en/releases#urn:btih:'+hash,nyaaURL:nyaa,source:'official-release'};
   const existing=result.get(hash);if(existing&&JSON.stringify(existing)!==JSON.stringify(item))throw Error('Ambiguous official release hash');result.set(hash,item);

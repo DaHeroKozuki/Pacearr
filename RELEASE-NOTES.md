@@ -1,46 +1,44 @@
-# Pacearr v1.0.3 — Portable setup 🚢
+# Pacearr v1.1.0 — Smarter downloads. Fewer blockers. 🚢
 
-**Your adventure. Perfectly organised.** The public setup guide now explains how anyone can deploy Pacearr with their own folders, account IDs and WebUI port. It includes the v1.0.2 download-management and Deluge fixes.
+**Fill the gaps. Skip the extras. Keep control.** This update brings selective bundle downloading, usable release fallbacks and recovery for downloads that were previously stuck awaiting action. The glass-style control room stays familiar.
 
-![Pacearr WebUI](https://raw.githubusercontent.com/DaHeroKozuki/Pacearr/v1.0.3/docs/screenshots/overview.png)
+![Pacearr control room](https://raw.githubusercontent.com/DaHeroKozuki/Pacearr/v1.1.0/docs/screenshots/overview.png)
 
-## Set up your own container
+## Download the episodes you choose
 
-- Copy `.env.example` to `.env` and choose your host library/download folders, UID:GID and an available WebUI port.
-- Use the portable Compose file; the sample host port is 3000 and can be changed independently of the internal port.
-- Mount persistent state at `/data/state`, library at `/library` and downloads at `/downloads`, or keep your existing destinations when updating.
-- Configure the actual series folder, supported torrent client and optional read-only Plex connection in the WebUI.
-- NAS instructions explain the same setup without depending on a particular user's folder layout or account.
+Your Library selection carries into confirmation with an exact count. Optional additional upgrades are unchecked. Episodes sharing a torrent are grouped into one request; unneeded bundle files have zero download priority. Finished selected files can import while other files remain incomplete. Pause/resume selected downloads, cancel requests, clear pending grabs or stop all Pacearr downloads. Cancellations persist and source data is retained.
 
-[Complete setup and mount guide](https://github.com/DaHeroKozuki/Pacearr/blob/v1.0.3/README.md#getting-started) · [Compose example](https://github.com/DaHeroKozuki/Pacearr/blob/v1.0.3/compose.yaml) · [Environment example](https://github.com/DaHeroKozuki/Pacearr/blob/v1.0.3/.env.example)
+## Bring completed downloads home
 
-## Clearer downloads and activity
+The upgraded worker rechecks previous policy/metadata review entries without redownloading. Verified older/non-preferred versions can fill missing episodes. English audio or Japanese audio with English subtitles can serve as a usable language fallback. Choose a minimum of 480p, 720p or 1080p independently of your upgrade target; automatic downgrades are blocked.
 
-Downloads separates Queued episode grabs, Downloading, Awaiting action, Completed and Errors. Successful imports/source deletion have their own controls; review/approval/manual-assignment files have separate single/bulk actions. Selections clear when files change category.
+Beta filename checksum aliases are recognised, and untagged files receive a cached content checksum. Language preferences are soft: a verified episode with audio can also import when preferred tracks/subtitles are unavailable or unconfirmed, with that limitation shown clearly. No-audio media still needs review. Copies and replacements use recovery journals, free-space checks and verified publication; previous replaced files are backed up. Unknown custom edits still need a confirmed episode assignment rather than guessed numbering. Recheck completed downloads and single/bulk manual imports provide the recovery controls.
 
-Deluge errors now show the operation, RPC method, code and reason with password redaction. Exact existing/being-added hashes are reused, accepted magnets are not repeatedly submitted while waiting for feed visibility, and confirmation failures show a manual next step. Activity severity filtering and current failed-grab counts distinguish historical errors from ongoing work.
+## Keep Deluge organised
 
-![Pacearr Downloads](https://raw.githubusercontent.com/DaHeroKozuki/Pacearr/v1.0.3/docs/screenshots/downloads.png)
+An optional label selector lets you refresh, create and verify labels using your saved encrypted Deluge connection. The selected label applies to new and existing Pacearr-managed torrents. Labels are not an import requirement. Pacearr does not configure file moves; an existing label’s move rule is reported before saving. Unrelated torrents are left alone.
 
-## Update an existing deployment
+![Pacearr Downloads](https://raw.githubusercontent.com/DaHeroKozuki/Pacearr/v1.1.0/docs/screenshots/downloads.png)
 
-Run from your own deployment directory:
+Activity distinguishes manual grabs from automatic missing episodes, revisions and quality upgrades. Retries use delays and capped attempts; accepted torrents are not repeatedly submitted while awaiting visibility. Automation shows running/paused/blocked status and last/next checks. Library, overview and download outcomes refresh automatically.
+
+## Update your deployment
+
+Back up your persistent state first, then run from your deployment directory:
 
 ```sh
 docker compose -p pacearr -f compose.yaml pull pacearr
 docker compose -p pacearr -f compose.yaml up -d --no-build --no-deps --force-recreate pacearr
 ```
 
-Use `docker-compose` on hosts with the older command. Keep existing ports, mount destinations, private `.env` and `/data/state`; do not replace your working configuration with placeholder paths. Refresh the browser once for updated assets. Saved credentials, checksum records, activity and automation preferences are preserved.
+Use `docker-compose` if your host has the older command. Keep your working Compose mounts, ports, private `.env` and `/data/state`. Refresh the browser once for the new controls. Saved credentials, checksums, activity and automation preferences are retained. Previously blocked completed files are reconsidered automatically when automation is enabled. A saved pause remains paused.
 
-Images: `ghcr.io/daherokozuki/pacearr:v1.0.3`, `:latest` and compatibility tag `:alpha`, supporting amd64/arm64.
+Images: `ghcr.io/daherokozuki/pacearr:v1.1.0`, `:latest` and `:alpha`, for amd64 and arm64. Application/source ZIPs and SHA256SUMS are attached.
 
-## Source, history and verification
+## Practical limits and validation
 
-The application ZIP, complete active source archive and SHA256SUMS are attached. Earlier source, historical references, artwork and credits remain in the repository/history. Private state, keys, media and credentials are never packaged.
+Selective bundle acquisition needs verified torrent-file metadata. If the official Nyaa download and hash-cache fallback are unavailable, Pacearr reports a retryable error without starting the whole payload. BitTorrent piece boundaries can cause a small amount of neighbouring skipped-file data. Only a real NAS run can confirm each custom cut’s mapping and your Deluge/plugin configuration.
 
-Current runtime supports Deluge and mounted libraries, plus read-only Plex tests/discovery. Historical implementations for other clients/media servers remain documented separately; this release does not claim they are enabled.
+The release workflow runs unit and isolated integration tests for import migration, checksum aliases, 480p/language fallbacks, partial-bundle completion, selective file priorities, shared-hash requests, label verification, scoped pause/cancel controls, restart persistence and source preservation, followed by Docker health checks before publishing. Local browser checks cover exact selections, unchecked optional upgrades, automatic refresh and desktop/mobile credential controls. Showcase screenshots use synthetic data.
 
-Validation includes 23 unit tests, automation/import/upgrade/bulk/restart fixtures, delayed Deluge visibility, desktop/mobile section-selection checks, portable Compose validation and CI Docker build/health checks before publication. Screenshots show isolated demo data.
-
-[Explore Pacearr](https://github.com/DaHeroKozuki/Pacearr) · [Join the community](https://discord.gg/u3zksrG8G6)
+[Setup and mount guide](https://github.com/DaHeroKozuki/Pacearr/blob/v1.1.0/README.md#getting-started) · [Source and project history](https://github.com/DaHeroKozuki/Pacearr) · [Join the community](https://discord.gg/u3zksrG8G6)
