@@ -1,20 +1,23 @@
-version: '3.7'
+# Synology uses the same portable configuration. Set host paths and UID:GID in .env.
 services:
   pacearr:
     image: ghcr.io/daherokozuki/pacearr:latest
     container_name: pacearr
     restart: unless-stopped
-    user: '1026:100'
+    user: "${PUID:-1000}:${PGID:-1000}"
     read_only: true
     security_opt:
       - no-new-privileges:true
     cap_drop:
       - ALL
     ports:
-      - '49113:3000'
+      - "${WEB_PORT:-3000}:3000"
+    environment:
+      PACEARR_LIBRARY_ROOT: /library
+      PACEARR_DOWNLOAD_ROOT: /downloads
     volumes:
       - ./data/state:/data/state
-      - /volume1/Media/Anime:/Media/Anime:rw
-      - /volume1/Data/downloads:/Data/downloads:rw
+      - ${LIBRARY_DIR:?Set LIBRARY_DIR in .env}:/library:rw
+      - ${DOWNLOADS_DIR:?Set DOWNLOADS_DIR in .env}:/downloads:rw
     tmpfs:
       - /tmp

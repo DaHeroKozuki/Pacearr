@@ -37,6 +37,10 @@ jobs:
           node --check web/manager.js
       - name: Automation and live-action integration checks
         run: npm run test:integration
+      - name: Validate portable deployment examples
+        run: |
+          docker compose --env-file .env.example -f compose.yaml config --quiet
+          docker compose --env-file .env.example -f compose.synology.yaml config --quiet
       - name: Build and smoke test native image
         run: |
           docker build -t pacearr-smoke .
@@ -64,25 +68,25 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ghcr.io/daherokozuki/pacearr:v1.0.2
+            ghcr.io/daherokozuki/pacearr:v1.0.3
             ghcr.io/daherokozuki/pacearr:latest
             ghcr.io/daherokozuki/pacearr:alpha
           labels: |
             org.opencontainers.image.source=https://github.com/DaHeroKozuki/Pacearr
-            org.opencontainers.image.version=1.0.2
+            org.opencontainers.image.version=1.0.3
             org.opencontainers.image.revision=${{ github.sha }}
       - name: Package application update
         run: python3 scripts/package-release.py
       - name: Publish release and source bundle
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.2
+          tag_name: v1.0.3
           target_commitish: ${{ github.sha }}
-          name: Pacearr v1.0.2 — Clearer Downloads
+          name: Pacearr v1.0.3 — Portable Setup
           body_path: RELEASE-NOTES.md
           make_latest: true
           prerelease: false
           files: |
-            dist/pacearr-v1.0.2.zip
-            dist/pacearr-v1.0.2-source.zip
+            dist/pacearr-v1.0.3.zip
+            dist/pacearr-v1.0.3-source.zip
             dist/SHA256SUMS

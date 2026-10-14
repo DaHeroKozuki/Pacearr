@@ -1,7 +1,7 @@
 FROM node:24-alpine
 RUN apk add --no-cache ffmpeg
 LABEL org.opencontainers.image.source="https://github.com/DaHeroKozuki/Pacearr"
-LABEL org.opencontainers.image.version="1.0.2"
+LABEL org.opencontainers.image.version="1.0.3"
 WORKDIR /app
 COPY server.mjs beta-readonly.mjs beta-policy.mjs import-engine.mjs official-releases.mjs download-actions.mjs ./
 COPY web ./web

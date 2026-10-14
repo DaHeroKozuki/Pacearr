@@ -1,49 +1,46 @@
-# Clearer downloads. Clearer decisions. 🚢
+# Pacearr v1.0.3 — Portable setup 🚢
 
-Pacearr v1.0.2 separates successful work from files needing attention and makes the Deluge grab lifecycle easier to follow. The glass layout and ship banner stay intact.
+**Your adventure. Perfectly organised.** The public setup guide now explains how anyone can deploy Pacearr with their own folders, account IDs and WebUI port. It includes the v1.0.2 download-management and Deluge fixes.
 
-![Pacearr Downloads](https://raw.githubusercontent.com/DaHeroKozuki/Pacearr/v1.0.2/docs/screenshots/downloads.png)
+![Pacearr WebUI](https://raw.githubusercontent.com/DaHeroKozuki/Pacearr/v1.0.3/docs/screenshots/overview.png)
 
-## Downloads now has distinct sections
+## Set up your own container
 
-- **Queued episode grabs:** requests waiting for a slot or Deluge metadata/feed confirmation. Existing torrents outside the configured folder are explained here.
-- **Downloading:** scoped torrent progress.
-- **Awaiting action:** completed downloads needing verification, approval, a profile decision or manual episode assignment—with its own single/bulk import and deletion controls.
-- **Completed:** imported or already installed source files, with a separate selection and source-deletion control. Sources remain available for seeding until explicitly deleted.
-- **Errors:** current failed jobs, actual reasons, retry timing and actions. Manual grab failures now appear here too.
+- Copy `.env.example` to `.env` and choose your host library/download folders, UID:GID and an available WebUI port.
+- Use the portable Compose file; the sample host port is 3000 and can be changed independently of the internal port.
+- Mount persistent state at `/data/state`, library at `/library` and downloads at `/downloads`, or keep your existing destinations when updating.
+- Configure the actual series folder, supported torrent client and optional read-only Plex connection in the WebUI.
+- NAS instructions explain the same setup without depending on a particular user's folder layout or account.
 
-Selections are scoped to their section and cleared when a file changes category, avoiding accidental reuse of a selection after import.
+[Complete setup and mount guide](https://github.com/DaHeroKozuki/Pacearr/blob/v1.0.3/README.md#getting-started) · [Compose example](https://github.com/DaHeroKozuki/Pacearr/blob/v1.0.3/compose.yaml) · [Environment example](https://github.com/DaHeroKozuki/Pacearr/blob/v1.0.3/.env.example)
 
-## Deluge rejections explained
+## Clearer downloads and activity
 
-The previous generic “rejected read-only query” message hid the failed operation. New messages include the RPC method, error code and Deluge's reason, with saved password values redacted. Grab failures show attempt and retry timing; skipped grabs explain why they were skipped.
+Downloads separates Queued episode grabs, Downloading, Awaiting action, Completed and Errors. Successful imports/source deletion have their own controls; review/approval/manual-assignment files have separate single/bulk actions. Selections clear when files change category.
 
-Exact existing hashes are reused. A duplicate/being-added response naming the requested hash is treated as confirmation, not an unsuccessful new grab. Successfully accepted magnets reserve concurrency capacity while waiting for feed visibility and are not resubmitted automatically. If confirmation remains absent after five minutes, the queue asks for a Deluge check and manual Retry instead of sending another add blindly.
+Deluge errors now show the operation, RPC method, code and reason with password redaction. Exact existing/being-added hashes are reused, accepted magnets are not repeatedly submitted while waiting for feed visibility, and confirmation failures show a manual next step. Activity severity filtering and current failed-grab counts distinguish historical errors from ongoing work.
 
-## Activity distinguishes current work from history
+![Pacearr Downloads](https://raw.githubusercontent.com/DaHeroKozuki/Pacearr/v1.0.3/docs/screenshots/downloads.png)
 
-A severity filter helps inspect information, warnings or errors. The current failed-grab count is shown separately from historical events, which may already be resolved. Existing history and checksum records remain intact.
+## Update an existing deployment
 
-![Pacearr Activity](https://raw.githubusercontent.com/DaHeroKozuki/Pacearr/v1.0.2/docs/screenshots/activity.png)
-
-## Try missing episodes
-
-In Library, filter to Missing, select the episodes you want and use Grab selected episodes. Review the available releases/profile matches before submitting. Alternatively, enable Automatically grab missing episodes in Profiles and save while automation runs. Existing saved preferences are not silently changed; the default concurrency remains three unless you changed it.
-
-Unavailable releases or unsupported profile matches can remain missing; the new skip/queue messages distinguish these from successful submissions and actual failures.
-
-## Update
+Run from your own deployment directory:
 
 ```sh
-cd /volume1/docker/pacearr
-docker-compose -p pacearr -f compose.yaml pull pacearr
-docker-compose -p pacearr -f compose.yaml up -d --no-build --no-deps --force-recreate pacearr
+docker compose -p pacearr -f compose.yaml pull pacearr
+docker compose -p pacearr -f compose.yaml up -d --no-build --no-deps --force-recreate pacearr
 ```
 
-Refresh the browser once for the new assets. Preserve `/data/state`. Public images: `ghcr.io/daherokozuki/pacearr:v1.0.2`, `:latest` and compatibility tag `:alpha`, for amd64/arm64.
+Use `docker-compose` on hosts with the older command. Keep existing ports, mount destinations, private `.env` and `/data/state`; do not replace your working configuration with placeholder paths. Refresh the browser once for updated assets. Saved credentials, checksum records, activity and automation preferences are preserved.
 
-The application ZIP, complete active source archive and SHA256SUMS are attached. All earlier source/history and the expanded [setup/mount guide](https://github.com/DaHeroKozuki/Pacearr) remain available. No private state or credentials are packaged.
+Images: `ghcr.io/daherokozuki/pacearr:v1.0.3`, `:latest` and compatibility tag `:alpha`, supporting amd64/arm64.
 
-**Validation:** 23 unit tests, automatic import/upgrade/acquisition/bulk/restart fixtures, a delayed Deluge visibility regression, desktop/mobile UI checks, and CI Docker build/health checks before publication. Screenshots use isolated demonstration data.
+## Source, history and verification
 
-[Project and setup guide](https://github.com/DaHeroKozuki/Pacearr) · [Community](https://discord.gg/u3zksrG8G6)
+The application ZIP, complete active source archive and SHA256SUMS are attached. Earlier source, historical references, artwork and credits remain in the repository/history. Private state, keys, media and credentials are never packaged.
+
+Current runtime supports Deluge and mounted libraries, plus read-only Plex tests/discovery. Historical implementations for other clients/media servers remain documented separately; this release does not claim they are enabled.
+
+Validation includes 23 unit tests, automation/import/upgrade/bulk/restart fixtures, delayed Deluge visibility, desktop/mobile section-selection checks, portable Compose validation and CI Docker build/health checks before publication. Screenshots show isolated demo data.
+
+[Explore Pacearr](https://github.com/DaHeroKozuki/Pacearr) · [Join the community](https://discord.gg/u3zksrG8G6)

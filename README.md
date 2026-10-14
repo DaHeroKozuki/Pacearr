@@ -6,7 +6,7 @@
 
 **One Pace library automation, built for self-hosters.**
 
-[![Version](https://img.shields.io/badge/version-1.0.2-38bdf8?style=flat-square)](https://github.com/DaHeroKozuki/Pacearr/releases)
+[![Version](https://img.shields.io/badge/version-1.0.3-38bdf8?style=flat-square)](https://github.com/DaHeroKozuki/Pacearr/releases)
 [![GitHub Packages](https://img.shields.io/badge/ghcr.io-daherokozuki%2Fpacearr-blue?style=flat-square&logo=github)](https://github.com/DaHeroKozuki/Pacearr/pkgs/container/pacearr)
 [![GitHub Release](https://img.shields.io/github/v/release/DaHeroKozuki/Pacearr?include_prereleases&style=flat-square)](https://github.com/DaHeroKozuki/Pacearr/releases)
 [![GitHub Issues](https://img.shields.io/github/issues/DaHeroKozuki/Pacearr?style=flat-square)](https://github.com/DaHeroKozuki/Pacearr/issues)
@@ -158,7 +158,27 @@ Docker images support **linux/amd64** and **linux/arm64**. Node.js 24 and ffmpeg
 
 ### Docker Compose
 
-Use `ghcr.io/daherokozuki/pacearr:latest` for easy updates, or pin `:v1.0.2`. The service, container and project are named **pacearr**.
+Use `ghcr.io/daherokozuki/pacearr:latest` for updates, or pin a published version. The examples below are portable defaults—not a particular user's installation.
+
+Create a deployment folder anywhere you prefer. Place `compose.yaml` and a private `.env` there:
+
+```sh
+mkdir -p /path/to/pacearr/data/state
+cd /path/to/pacearr
+cp /path/to/downloaded/.env.example .env
+```
+
+Edit `.env` with your host's user/group IDs and folders:
+
+```dotenv
+PUID=1000
+PGID=1000
+WEB_PORT=3000
+LIBRARY_DIR=/path/to/one-pace-library
+DOWNLOADS_DIR=/path/to/downloads
+```
+
+`1000:1000` is an example, not an instruction to use that account on every host. Run `id your-service-user` to find suitable IDs. Choose any free host port; the internal port stays `3000`. Paths on the left of a volume mapping belong to your host.
 
 ```yaml
 services:
@@ -166,52 +186,54 @@ services:
     image: ghcr.io/daherokozuki/pacearr:latest
     container_name: pacearr
     restart: unless-stopped
-    user: "1000:1000" # Replace with your host user's UID:GID
+    user: "${PUID:-1000}:${PGID:-1000}"
     read_only: true
     security_opt:
       - no-new-privileges:true
     cap_drop:
       - ALL
     ports:
-      - "49113:3000"
+      - "${WEB_PORT:-3000}:3000"
     environment:
       PACEARR_LIBRARY_ROOT: /library
       PACEARR_DOWNLOAD_ROOT: /downloads
     volumes:
       - ./data/state:/data/state
-      - /path/to/library:/library:rw
-      - /path/to/downloads:/downloads:rw
+      - ${LIBRARY_DIR:?Set LIBRARY_DIR in .env}:/library:rw
+      - ${DOWNLOADS_DIR:?Set DOWNLOADS_DIR in .env}:/downloads:rw
     tmpfs:
       - /tmp
+
 ```
 
-Replace host paths and UID:GID. Create `data/state` and grant that user access before starting. `read_only` protects the container image filesystem; the named bind mounts remain writable as shown. Download writes are used for explicitly requested deletion, not automatic source cleanup.
+Create a writable state directory owned by the chosen UID:GID, then start:
 
 ```sh
 mkdir -p data/state
-sudo chown -R 1000:1000 data/state  # Use the same UID:GID as Compose
+sudo chown -R 1000:1000 data/state  # Replace with your chosen UID:GID
 
-docker compose -p pacearr pull pacearr
-docker compose -p pacearr up -d pacearr
-docker compose -p pacearr logs --tail 30 pacearr
+docker compose -p pacearr --env-file .env -f compose.yaml pull pacearr
+docker compose -p pacearr --env-file .env -f compose.yaml up -d pacearr
+docker compose -p pacearr --env-file .env -f compose.yaml logs --tail 30 pacearr
 ```
 
-Open **http://your-server:49113**, create your administrator account and finish setup in Settings.
+Open **http://your-server:3000**, or substitute the `WEB_PORT` you chose. Create the administrator account and configure the mounted paths/connections in Settings.
 
-### Synology
+### NAS and Synology installations
 
-Use `compose.synology.yaml` as an example and save it as `/volume1/docker/pacearr/compose.yaml`. Its sample mounts use `/volume1/Media/Anime` and `/volume1/Data/downloads`, with UID:GID `1026:100`; adjust these for your NAS. The existing standalone setup retains its original container paths `/Media/Anime` and `/Data/downloads`, so saved paths and checksums remain valid.
+The same Compose file works on a NAS. Set your own host folders in `.env`, for example `LIBRARY_DIR=/volume1/path/to/one-pace-library` and `DOWNLOADS_DIR=/volume1/path/to/downloads`. Find a suitable NAS service account UID:GID; do not assume desktop Linux example IDs are correct. Older installations may use `docker-compose` instead of `docker compose`.
 
-Your live deployment folder needs only:
+Choose any deployment folder you prefer. Its minimal layout is:
 
 ```text
-/volume1/docker/pacearr/
+pacearr/
 ├── compose.yaml
+├── .env          ← your host paths, UID:GID and chosen WebUI port
 └── data/
-    └── state/   ← settings, encrypted credentials/keys, checksum records and history
+    └── state/    ← private settings, vault keys, checksums and history
 ```
 
-A private `.env` may also be needed if you chose to reference one from Compose. ZIPs, source files, web assets, tests and Dockerfiles are not required for a registry-image deployment.
+Source, ZIPs, tests and Dockerfiles are not needed in a registry-image deployment.
 
 ### Recommended first run
 
@@ -246,7 +268,7 @@ Use Node.js 24 or later and install ffprobe for real media-track inspection. The
 | Downloads root → `/downloads` (or your existing path) | Read completed sources; explicitly delete selected files | Read/traverse; write required for deletion |
 | `/tmp` tmpfs | Temporary process data in a read-only container | Writable tmpfs |
 
-**The saved download path must match Deluge's reported absolute path.** If Deluge reports `/Data/downloads/One Pace`, mount the host downloads directory at `/Data/downloads` inside Pacearr too, and set `PACEARR_DOWNLOAD_ROOT=/Data/downloads`. Save `/Data/downloads/One Pace` in Settings—not its parent directory. Files in other folders are excluded.
+**The saved download path must match Deluge's reported absolute path.** For example, mount a host downloads directory at `/downloads` in both containers, set `PACEARR_DOWNLOAD_ROOT=/downloads`, and save `/downloads/One Pace` in Pacearr Settings. Configure the torrent client to use that same container-visible folder. Select the exact series subfolder, not the parent directory. Files in other folders are excluded.
 
 If both services report different container paths for the same host directory, fix the volume destination before enabling automation. v1 currently expects matching absolute paths and does not infer a remote mapping from legacy variables.
 
@@ -256,13 +278,13 @@ Do not recursively change ownership of your whole media collection just to solve
 
 Routine settings are managed in the WebUI rather than `.env`. Runtime roots define where saved paths may point.
 
-| Variable | Docker default | Purpose |
+| Variable | Recommended starter configuration | Purpose |
 | --- | --- | --- |
 | `PORT` | `3000` | Internal HTTP port |
 | `PACEARR_STATE_DIR` | `/data/state` | Persistent settings/vault/history directory |
 | `PACEARR_WEB_DIR` | `/app/web` | Bundled WebUI assets |
-| `PACEARR_LIBRARY_ROOT` | `/Media/Anime` | Allowed library root; generic Compose overrides to `/library` |
-| `PACEARR_DOWNLOAD_ROOT` | `/Data/downloads` | Allowed download root; generic Compose overrides to `/downloads` |
+| `PACEARR_LIBRARY_ROOT` | `/library` | Allowed library root; explicitly set by starter Compose |
+| `PACEARR_DOWNLOAD_ROOT` | `/downloads` | Allowed download root; explicitly set by starter Compose |
 | `PACEARR_FFPROBE` | `ffprobe` | Media inspection executable |
 
 | WebUI setting | What it controls |
@@ -291,7 +313,7 @@ Pausing stops the next automatic grab/import; an in-flight verified operation ma
 ### Normal registry updates
 
 ```sh
-cd /volume1/docker/pacearr
+cd /path/to/pacearr
 # Use `docker-compose` instead of `docker compose` on older Synology installations.
 docker compose -p pacearr -f compose.yaml pull pacearr
 docker compose -p pacearr -f compose.yaml up -d --no-build --no-deps --force-recreate pacearr
@@ -300,13 +322,15 @@ docker compose -p pacearr -f compose.yaml logs --tail 30 pacearr
 
 Refresh the browser once to load updated application assets. Routine content changes then refresh automatically. Your library, downloads and `/data/state` stay in their bind-mounted folders.
 
-### Existing standalone installations
+### Existing deployments and cleanup
 
-The [migration script](scripts/migrate-synology.sh) changes the old project/service/container names to `pacearr`, preserves mounts and saved state, pulls the current public image and checks health before removing the stopped old container. Run it as root from the official folder. It refuses to proceed if the existing container still points to the old state folder or the clean container name is already occupied.
+Keep your existing mount destinations and `/data/state` location when updating. Do not overwrite a working Compose file with example paths. Changing the application image does not migrate your host folders automatically.
 
-The [cleanup script](scripts/cleanup-synology.py) moves unused development files into a dated backup outside `/volume1/docker/pacearr`; it does not delete them. It retains Compose, state, optional `.env` and anything currently mounted under that folder. Unsupported Compose file/env references require review before cleanup.
+If you want to change project/service/container names, the migration helper takes explicit deployment and old-name parameters; see its required variables before running it. It backs up configuration/state and checks the new container's health. No personal deployment paths are hard-coded.
 
-Before deleting `pacearr-alpha-test`, inspect the running container and confirm its state mount is `/volume1/docker/pacearr/data/state`. GitHub contains application source, tests and build files; **your private state is intentionally not on GitHub**. Keep a separate backup of `data/state`, including vault keys.
+The cleanup helper takes a deployment-directory argument and the container name. It archives unused development files outside that directory, retains `.env`, configuration/state and mounted files, and refuses unsupported additional Compose references. Read its output before removing backups.
+
+GitHub contains application source and tests. **Private settings, vault keys, media and checksum records are not uploaded.** Verify the running state mount and keep a separate state backup before deleting any old deployment folder.
 
 ### Earlier Alpha / OnePacerr migrations
 
@@ -328,6 +352,7 @@ Stop the worker before restoring an earlier image or application. Avoid replacin
 | Library management | Library/download views, profiles, persisted checksums and Activity |
 | Live automation | Verified imports, same-cut revisions, quality upgrades and explicit grabs |
 | `1.0.0` | Public WebUI runtime, automatic refresh and the ship-banner interface |
+| `1.0.3` | Portable public Compose examples, configurable ports/UID/GID and deployment-independent documentation |
 | `1.0.2` | Separate Completed/Awaiting action views, visible grab queue, clear RPC errors and delayed-magnet duplicate protection |
 | `1.0.1` | Clean deployment names, portable integration tests, complete source bundle and expanded documentation/gallery |
 
@@ -580,20 +605,20 @@ Do not rename `MOUNT_LIBRARY_ONEPACERR` or `MOUNT_DOWNLOADS_ONEPACERR`; those ar
 If Plex runs on Windows but Pacearr runs in a Linux container, Plex may report:
 
 ```text
-M:\Anime
+M:\TV
 ```
 
 while Pacearr sees the same directory as:
 
 ```text
-/volume1/Media/Anime
+/library
 ```
 
 Configure:
 
 ```dotenv
-MOUNT_LIBRARY_MEDIA_SERVER=M:\Anime
-MOUNT_LIBRARY_ONEPACERR=/volume1/Media/Anime
+MOUNT_LIBRARY_MEDIA_SERVER=M:\TV
+MOUNT_LIBRARY_ONEPACERR=/library
 ```
 
 `MOUNT_LIBRARY_MEDIA_SERVER` must match Plex's reported path. `MOUNT_LIBRARY_ONEPACERR` must match the path inside the Pacearr container. The same principle applies to torrent-client download paths. See [TRaSH Guides' remote path mapping explanation](https://trash-guides.info/Radarr/Tips/Radarr-remote-path-mapping/) for additional background.

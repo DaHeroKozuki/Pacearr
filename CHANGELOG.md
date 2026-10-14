@@ -1,3 +1,7 @@
+# v1.0.3 — Portable Setup
+
+Public configuration is deployment-independent: explicit host-path variables, configurable WebUI port and UID:GID, portable NAS examples and parameterized migration/cleanup helpers. No live settings are modified by the image update.
+
 # v1.0.2 — Clearer Downloads
 
 Separate Completed/Awaiting action sections and bulk controls; queued grabs exposed; Activity severity filter/current failure count; Deluge method/code/reason retained with secret redaction; existing/being-added hashes reused; accepted but invisible magnets reserve capacity and are not resubmitted automatically.

@@ -1,6 +1,6 @@
 {
   "name": "pacearr",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "type": "module",
   "description": "One Pace library control with verified imports and upgrades",
   "private": true,

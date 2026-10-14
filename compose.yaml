@@ -3,16 +3,20 @@ services:
     image: ghcr.io/daherokozuki/pacearr:latest
     container_name: pacearr
     restart: unless-stopped
-    user: "1000:1000"
+    user: "${PUID:-1000}:${PGID:-1000}"
     read_only: true
-    security_opt: [no-new-privileges:true]
-    cap_drop: [ALL]
-    ports: ["49113:3000"]
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    ports:
+      - "${WEB_PORT:-3000}:3000"
     environment:
       PACEARR_LIBRARY_ROOT: /library
       PACEARR_DOWNLOAD_ROOT: /downloads
     volumes:
       - ./data/state:/data/state
-      - /path/to/library:/library:rw
-      - /path/to/downloads:/downloads:rw
-    tmpfs: [/tmp]
+      - ${LIBRARY_DIR:?Set LIBRARY_DIR in .env}:/library:rw
+      - ${DOWNLOADS_DIR:?Set DOWNLOADS_DIR in .env}:/downloads:rw
+    tmpfs:
+      - /tmp

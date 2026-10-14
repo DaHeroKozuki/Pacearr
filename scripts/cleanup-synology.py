@@ -2,8 +2,10 @@
 """Archive unused deployment files; retain mounted state and configuration."""
 from pathlib import Path
 from datetime import datetime
-import subprocess, json, os, re, shutil
-root=Path('/volume1/docker/pacearr')
+import subprocess, json, os, re, shutil, sys
+assert len(sys.argv)==2, 'Usage: python3 cleanup-synology.py /path/to/deployment'
+root=Path(sys.argv[1]).resolve()
+container_name=os.environ.get('PACEARR_CONTAINER','pacearr')
 assert os.geteuid()==0, 'Run as root with sudo -i'
 assert root.is_dir() and (root/'compose.yaml').is_file()
 assert (root/'data/state').is_dir(), 'Saved state is missing'
@@ -12,7 +14,7 @@ assert not re.search(r'^\s*(env_file|include|extends|configs|secrets|build):',te
 keep={'compose.yaml','data','.env'}
 ids=subprocess.check_output(['docker','ps','-aq'],text=True).split()
 containers=json.loads(subprocess.check_output(['docker','inspect',*ids],text=True)) if ids else []
-active=[c for c in containers if c['Name'].lstrip('/') in ('pacearr','pacearr-alpha-test') and c['State']['Running']]
+active=[c for c in containers if c['Name'].lstrip('/') in (container_name,) and c['State']['Running']]
 assert len(active)==1, 'Exactly one running Pacearr container is required'
 state=[m for m in active[0]['Mounts'] if m['Destination']=='/data/state']
 assert len(state)==1 and Path(state[0]['Source']).resolve()==(root/'data/state').resolve(), 'Container still uses another state folder; finish the move first'
@@ -28,7 +30,7 @@ extras=[p for p in root.iterdir() if p.name not in keep]
 if not extras:
     print('Already clean: only configuration and mounted data remain')
 else:
-    backup=Path('/volume1/docker/pacearr-backups')/('cleanup-'+datetime.now().strftime('%Y%m%d-%H%M%S'))
+    backup=root.parent/'pacearr-backups'/('cleanup-'+datetime.now().strftime('%Y%m%d-%H%M%S'))
     backup.mkdir(parents=True,mode=0o700)
     backup.chmod(0o700)
     for p in extras:
