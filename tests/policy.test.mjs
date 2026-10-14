@@ -12,7 +12,7 @@ test('Automatic revision and quality upgrade policy rejects downgrades and unkno
  assert.equal(replacementPolicy(known,{height:1080},fresh,defaultProfile).kind,'release-revision');assert.equal(replacementPolicy(known,{height:1080},fresh,defaultProfile).automatic,true);
  assert.equal(replacementPolicy(known,old,fresh,{...defaultProfile,autoQualityUpgrades:false}).automatic,false);
  assert.equal(replacementPolicy(known,{height:1080},old,defaultProfile).allowed,false);
- assert.equal(replacementPolicy({status:'review-checksum-mismatch'},old,fresh,defaultProfile).allowed,false);
+ const unknown=replacementPolicy({status:'review-checksum-mismatch'},old,fresh,defaultProfile);assert.equal(unknown.allowed,true);assert.equal(unknown.automatic,false);assert.equal(unknown.requiresIdentityApproval,true);
  const official={source:'official-release',title:'Skypiea 25 Alternate',height:1080};assert.equal(replacementPolicy({status:'review-checksum-mismatch'},official,official,defaultProfile).allowed,true);
 });
 

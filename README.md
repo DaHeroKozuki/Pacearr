@@ -6,7 +6,7 @@
 
 **One Pace library automation, built for self-hosters.**
 
-[![Version](https://img.shields.io/badge/version-1.1.2-38bdf8?style=flat-square)](https://github.com/DaHeroKozuki/Pacearr/releases)
+[![Version](https://img.shields.io/badge/version-1.2.0-38bdf8?style=flat-square)](https://github.com/DaHeroKozuki/Pacearr/releases)
 [![GitHub Packages](https://img.shields.io/badge/ghcr.io-daherokozuki%2Fpacearr-blue?style=flat-square&logo=github)](https://github.com/DaHeroKozuki/Pacearr/pkgs/container/pacearr)
 [![GitHub Release](https://img.shields.io/github/v/release/DaHeroKozuki/Pacearr?include_prereleases&style=flat-square)](https://github.com/DaHeroKozuki/Pacearr/releases)
 [![GitHub Issues](https://img.shields.io/github/issues/DaHeroKozuki/Pacearr?style=flat-square)](https://github.com/DaHeroKozuki/Pacearr/issues)
@@ -262,6 +262,7 @@ Source, ZIPs, tests and Dockerfiles are not needed in a registry-image deploymen
 ### Running locally
 
 ```sh
+npm ci
 npm test
 npm run test:integration
 
@@ -312,6 +313,22 @@ Routine settings are managed in the WebUI rather than `.env`. Runtime roots defi
 | Profiles | Cut preferences, missing/revision/quality grabs, quality/language and concurrency |
 
 Only private-network HTTP IP endpoints are currently accepted for Deluge/Plex connection tests. Public hosts, localhost and HTTPS endpoints are rejected by the current endpoint guard. Use the appropriate LAN IP, and ensure the container can reach it.
+
+## Official One Pace sync and persistent catalogue
+
+Pacearr checks One Pace's RSS feed every 15 minutes, with Atom and the release page as fallbacks. It collects torrent/magnet identity, episode/arc names, chapter/anime coverage, quality, languages, release dates and archival/change information. Direct `onepace.net/torrents/…` files are tried before Nyaa and torrent caches, and their info hashes must match the published identity before selected payload is started.
+
+A SQLite catalogue at `/data/state/pacearr.db` retains episode mappings, historical release records, installed fingerprints and confirmed assignments. Initial data includes a licensed snapshot of the community API and its full Shaved/Kuma/Onigashima and bundle records; those records are clearly distinguished from official releases. API and feed failures retain the last validated data. No external database service or extra mount is required. Existing credentials, checksum records and preferences remain in the same state volume.
+
+Official feed changes can discover episodes and revisions without waiting for the community API when the arc-to-season mapping is already established. New unknown arcs and conflicts with supplemental slots need mapping review; Pacearr preserves existing SxxEyy assignments instead of silently renumbering media. Older cuts with different coverage are not interchangeable with current episodes.
+
+**System → Refresh episode catalogue** checks sources explicitly and shows retained mapping/release counts, the last successful source and mapping warnings. Activity records catalogue changes and source failures. The full source dataset attribution and license are in `catalogue-seed/`.
+
+### Approve an unknown installed version
+
+A verified incoming release can offer **Approve replacement** when the older installed checksum is not recognised. Compare the episode/quality details, then approve the specific source and installed fingerprints. Changed files revoke approval. Automatic downgrades remain blocked; changing episode boundaries requires approval. Staged publication preserves the previous installed file. Search/grab preflight uses the same replacement policy so the UI explains this before acquisition.
+
+File size is a prefilter, not duplicate or upgrade proof. Same-size revised releases can upgrade when verified release identity supports the change. Historical metadata is retained when an upstream current list drops old versions.
 
 ## Reliability and recovery
 
@@ -374,6 +391,7 @@ Stop the worker before restoring an earlier image or application. Avoid replacin
 | Library management | Library/download views, profiles, persisted checksums and Activity |
 | Live automation | Verified imports, same-cut revisions, quality upgrades and explicit grabs |
 | `1.0.0` | Public WebUI runtime, automatic refresh and the ship-banner interface |
+| `1.2.0` | Official RSS/Atom sync, direct One Pace torrents, persistent episode/release catalogue and actionable unknown-version replacement |
 | `1.1.2` | Persistent retry/cancel state, verified torrent metadata caching and fallback, untracked-file discovery and confirmed bulk recovery |
 | `1.1.1` | Selective bundles, exact selections, 480p and usable fallbacks, scoped download controls, optional labels and completed-download recovery |
 | `1.0.3` | Portable public Compose examples, configurable ports/UID/GID and deployment-independent documentation |

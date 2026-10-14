@@ -1,3 +1,15 @@
+# v1.2.0 — Official One Pace sync and persistent catalogue
+
+- Collect official RSS releases, including checksum-only archived entries, with Atom/page fallbacks; try direct One Pace torrent files before Nyaa/caches.
+- Persist episode/arc mappings, full historical release records, installed fingerprints and confirmed assignments in SQLite; bootstrap a licensed community snapshot and retain validated data during source failures.
+- Preserve supplemental numbering when official coverage advances; expose mapping conflicts rather than silently repurpose existing slots.
+- Share replacement preflight with searches/grabs; offer fingerprint-bound approval for unknown installed versions and changed episode coverage.
+- Select untagged Shaved bundle files using exact curated hash/path/checksum bindings; require every requested file to be identified before payload starts.
+- Support platform-specific Deluge temporary directories and returned filenames; diagnose non-string handles and continue verifying hash/file identity.
+- Discover scoped disk files while Deluge is unavailable; retain explicit completion confirmation for untracked imports.
+- Add catalogue status/refresh to System, direct replacement approval to Downloads and meaningful catalogue Activity events.
+- Cover official-feed-only revisions with the community API unavailable, same-size changed content, restart persistence, historical/split cuts and unknown-version approvals.
+
 # v1.1.2 — Reliable retries and local file recovery
 
 - Preserve automatic missing-grab jobs, retry deadlines, attempt counts and cancellations across worker cycles.

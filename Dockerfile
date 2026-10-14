@@ -1,10 +1,13 @@
 FROM node:24-alpine
 RUN apk add --no-cache ffmpeg
 LABEL org.opencontainers.image.source="https://github.com/DaHeroKozuki/Pacearr"
-LABEL org.opencontainers.image.version="1.1.2"
+LABEL org.opencontainers.image.version="1.2.0"
 WORKDIR /app
-COPY server.mjs beta-readonly.mjs beta-policy.mjs import-engine.mjs official-releases.mjs download-actions.mjs torrent-metadata.mjs episode-mapping.mjs ./
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev --ignore-scripts
+COPY server.mjs beta-readonly.mjs beta-policy.mjs import-engine.mjs official-releases.mjs download-actions.mjs torrent-metadata.mjs episode-mapping.mjs onepace-feed.mjs episode-catalogue.mjs ./
 COPY web ./web
+COPY catalogue-seed ./catalogue-seed
 RUN mkdir -p /data/state && chown -R node:node /data
 USER node
 EXPOSE 3000

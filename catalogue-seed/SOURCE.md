@@ -1,0 +1,1 @@
+Community metadata snapshot from https://github.com/eltharynd/one-pace-api at commit b8eb5785ce12742a2aed854723cbcbdb60f4b044. Original license retained in LICENSE. These supplemental mappings are community curated, not official One Pace releases. Official release history is collected separately.

@@ -9,3 +9,10 @@
 !episode-mapping.mjs
 !web/
 !web/**
+
+!package.json
+!package-lock.json
+!onepace-feed.mjs
+!episode-catalogue.mjs
+!catalogue-seed/
+!catalogue-seed/**

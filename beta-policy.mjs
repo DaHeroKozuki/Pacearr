@@ -1,3 +1,4 @@
+import {coverageRelation} from './episode-catalogue.mjs';
 import {open,realpath} from 'node:fs/promises';
 import {constants} from 'node:fs';
 import {resolve,relative,isAbsolute} from 'node:path';
@@ -34,8 +35,9 @@ export async function hashLibraryFile(root,rel,onProgress){
 export function replacementPolicy(installed,oldMedia,newMedia,profile){
  if(!Number.isFinite(oldMedia?.height)||!Number.isFinite(newMedia?.height))return {allowed:false,reason:'Installed/source resolution is unverified'};
  if(newMedia.height<oldMedia.height)return {allowed:false,reason:'Quality downgrade blocked'};
+ if(oldMedia.mangaChapters&&newMedia.mangaChapters&&coverageRelation(oldMedia.mangaChapters,newMedia.mangaChapters)!=='exact')return {allowed:true,automatic:false,requiresIdentityApproval:true,kind:'coverage-change',reason:'Episode coverage changed; confirm the replacement and any split/merged episode assignments'};
  const officialSameRelease=oldMedia.source==='official-release'&&newMedia.source==='official-release'&&typeof oldMedia.title==='string'&&oldMedia.title.trim()&&oldMedia.title.trim().toLowerCase()===newMedia.title?.trim().toLowerCase();
- if(installed.status==='review-checksum-mismatch'&&!officialSameRelease)return {allowed:false,reason:'Installed release identity is unverified; replacement blocked'};
+ if(installed.status==='review-checksum-mismatch'&&!officialSameRelease)return {allowed:true,kind:newMedia.height>oldMedia.height?'quality-upgrade':'release-revision',automatic:false,requiresIdentityApproval:true,reason:'Incoming release verified; installed version is unknown. Confirm replacement of this episode; previous file will be preserved'};
  const knownCuts=['standard','extended','alternate'];const oldCut=knownCuts.includes(installed.originalVariant)?installed.originalVariant:knownCuts.includes(installed.variant)?installed.variant:oldMedia.source==='official-release'?( /\balternate\b/i.test(oldMedia.title||'')?'alternate':/\bextended\b/i.test(oldMedia.title||'')?'extended':'standard'):null;
  if(oldCut&&knownCuts.includes(installed.preferred)&&oldCut!==installed.preferred)return {allowed:true,kind:'variant-change',automatic:false,reason:'Preferred release is a different cut; authorisation required'};
  const kind=newMedia.height>oldMedia.height?'quality-upgrade':'release-revision';

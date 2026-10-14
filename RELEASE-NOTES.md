@@ -1,40 +1,42 @@
-# Pacearr v1.1.2 — Bring your remaining episodes home 🚢
+# Pacearr v1.2.0 — One Pace releases, straight to your library 🚢
 
-**Reuse the files you have. Keep retries under control.** This update repairs repeated automatic missing-episode requests and brings untracked downloads into the control room, while keeping the familiar glass interface.
+**Discover the release. Remember the episode. Bring it home.** Pacearr now reads official One Pace release feeds and keeps a persistent episode/release catalogue, with recovery controls for the files you already have.
 
-![Pacearr control room](https://raw.githubusercontent.com/DaHeroKozuki/Pacearr/v1.1.2/docs/screenshots/overview.png)
+![Pacearr control room](https://raw.githubusercontent.com/DaHeroKozuki/Pacearr/v1.2.0/docs/screenshots/overview.png)
 
-## Reliable automation overnight
+## Work directly with One Pace
 
-Automatic missing requests now retain their attempt counts, retry deadlines and cancellation state instead of being recreated each cycle. Requests sharing a bundle retain one bounded retry schedule. Confirmed local imports retire obsolete automatic missing requests for the same episode.
+RSS is checked every 15 minutes, with Atom and the release page as fallbacks. Releases include episode/arc names, coverage, quality, tracks, dates, hashes, magnets and revision/archival information. One Pace torrent URLs are tried before Nyaa and torrent caches. The published info hash is verified before needed files receive download priority; unrelated bundle files stay unselected.
 
-Verified torrent-file metadata is cached in persistent state. When direct retrieval fails, Pacearr can use Deluge WebUI retrieval and inspect the exact torrent hash and file list before adding a paused torrent with selected file priorities. Activity reports per-source HTTP, DNS, TLS and redirect failures instead of a generic fetch failure. Unavailable metadata does not start an entire unselected bundle.
+## A catalogue that remembers
 
-## Recover downloads without a Deluge entry
+SQLite stores mappings, historical releases, installed fingerprints and confirmed assignments in `/data/state/pacearr.db`. A licensed community snapshot includes full historical Shaved/Kuma, Onigashima and bundle records. Known mappings remain available across restarts, updates and provider outages. Feed-only revisions can trigger acquisition/import when an existing arc mapping is known, without waiting for the community API.
 
-Video files already inside the configured Download path now appear even if their torrent is absent from Deluge. Awaiting action distinguishes these untracked files from live downloads. **Import matched missing files** presents suggested episode assignments, including numbered custom cuts, for bulk review.
+Official and community records keep separate provenance. Unknown arcs, conflicting supplemental slots and split/merged coverage remain visible for review. Existing numbering is preserved. A missing checksum in the current API list no longer erases known historical release identity.
 
-Confirm that the files are fully downloaded and the assignments are correct. Pacearr checks the source fingerprint, probes the media, computes its checksum and verifies the copy before publishing the library file. Original downloads are retained. Completion confirmation is revoked if the source changes.
+## Unblock verified replacements
 
-A suggestion is not authoritative release proof. Older cuts can split episodes differently from current metadata; unverified alternatives keep installed episodes intact and remain available for explicit review. This update does not blindly turn every missing metadata checksum into an automatic import.
+Downloads offers **Approve replacement** for a verified incoming release when the installed version is unknown. Approval is bound to the current source and installed fingerprints; changed files require another review. The old copy is preserved during verified publication. Searches and grabs use the same replacement policy. Same-size revised files are supported; automatic downgrades and silent episode-boundary changes are blocked.
 
-## Update
+Deluge metadata fallback accepts valid platform temporary paths and returned filenames, while rejecting invalid handles and wrong hashes. Existing untracked videos remain discoverable even during a Deluge outage. **Import matched missing files** provides one-time confirmed recovery without downloading those sources again. Matching untracked files defer redundant grabs into local review.
 
-Back up persistent state, then run from your existing deployment directory:
+## Install/update
+
+From your existing deployment directory:
 
 ```sh
 docker compose -p pacearr -f compose.yaml pull pacearr
 docker compose -p pacearr -f compose.yaml up -d --no-build --no-deps --force-recreate pacearr
 ```
 
-Use `docker-compose` on older hosts. Keep existing mounts, ports, private configuration and `/data/state`. Refresh the browser once. Saved credentials, checksums, activity, automation preferences and pause decisions are retained. Verified completed files are reconsidered with automation enabled; untracked files require the confirmation described above.
+Use `docker-compose` on older hosts. Keep existing mounts and `/data/state`; no extra database container or mount is needed. Refresh the browser once. Saved credentials, checksums, automation preferences and pause/ignore decisions are retained.
 
-Images: `ghcr.io/daherokozuki/pacearr:v1.1.2`, `:latest` and `:alpha`, for amd64 and arm64. Application and full-source ZIPs plus SHA256SUMS are attached. Historical source and project documentation remain available.
+Open System to check catalogue sync. In Downloads, recheck completed files and approve verified replacements where requested. Untracked files still require confirmation that downloading is finished and assignments are correct. Automation processes eligible verified files; it does not blindly import every historical alternative.
 
-## Validation
+Images: `ghcr.io/daherokozuki/pacearr:v1.2.0`, `:latest`, `:alpha` for amd64 and arm64. Application/full-source ZIPs and SHA256SUMS are attached; historical source and documentation remain available.
 
-The release workflow runs unit tests, isolated integration checks, portable Compose validation and a native Docker health test before publishing. Regression coverage includes automatic-missing retries and cancellations, selective shared bundles, restart persistence, source preservation and confirmed recovery of 19 untracked files. Local browser checks cover exact selections, confirmation requirements, refreshed outcomes and credential controls. Showcase images use synthetic data.
+## Verification and practical limits
 
-Actual media assignments, remote metadata availability and sustained automation still need verification on each deployment. Check Activity after enabling automation; review suggestions before confirming untracked files.
+Unit, isolated integration, browser and Docker health checks cover historical records, official feed parsing, selected bundles, unknown-version approvals, same-size revisions, API outages and restart persistence. Public feed examples are used in parser fixtures; showcase images use synthetic data. Actual client responses and media assignments still need confirmation on each deployment. Direct torrents reduce fallback dependence for official releases; community supplemental bundles may still need their original sources. An unreachable official site uses retained data and fallbacks, not fabricated new releases.
 
-[Setup and mounts](https://github.com/DaHeroKozuki/Pacearr/blob/v1.1.2/README.md#getting-started) · [Source and history](https://github.com/DaHeroKozuki/Pacearr) · [Community](https://discord.gg/u3zksrG8G6)
+[Setup and mounts](https://github.com/DaHeroKozuki/Pacearr/blob/v1.2.0/README.md#getting-started) · [Source/history](https://github.com/DaHeroKozuki/Pacearr) · [Community](https://discord.gg/u3zksrG8G6)
