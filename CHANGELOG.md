@@ -1,3 +1,7 @@
+# v1.0.2 — Clearer Downloads
+
+Separate Completed/Awaiting action sections and bulk controls; queued grabs exposed; Activity severity filter/current failure count; Deluge method/code/reason retained with secret redaction; existing/being-added hashes reused; accepted but invisible magnets reserve capacity and are not resubmitted automatically.
+
 # v1.0.1 — Set Sail
 
 Clean project/service/container names, expanded documentation with WebUI gallery, preserved historical reference, portable integration tests, source archive and Synology migration/cleanup tools. Application state and imports remain compatible with v1.0.0.

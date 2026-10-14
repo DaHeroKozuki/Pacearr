@@ -6,7 +6,7 @@
 
 **One Pace library automation, built for self-hosters.**
 
-[![Version](https://img.shields.io/badge/version-1.0.1-38bdf8?style=flat-square)](https://github.com/DaHeroKozuki/Pacearr/releases)
+[![Version](https://img.shields.io/badge/version-1.0.2-38bdf8?style=flat-square)](https://github.com/DaHeroKozuki/Pacearr/releases)
 [![GitHub Packages](https://img.shields.io/badge/ghcr.io-daherokozuki%2Fpacearr-blue?style=flat-square&logo=github)](https://github.com/DaHeroKozuki/Pacearr/pkgs/container/pacearr)
 [![GitHub Release](https://img.shields.io/github/v/release/DaHeroKozuki/Pacearr?include_prereleases&style=flat-square)](https://github.com/DaHeroKozuki/Pacearr/releases)
 [![GitHub Issues](https://img.shields.io/github/issues/DaHeroKozuki/Pacearr?style=flat-square)](https://github.com/DaHeroKozuki/Pacearr/issues)
@@ -63,7 +63,7 @@ Browse installed and missing episodes, filter statuses, see saved checksum resul
 
 ### Downloads — watch progress and take action
 
-A live feed shows progress for the exact download folder you configured. Completed files have review, import and delete actions. Select several files for bulk import or confirmed deletion; inspect unresolved cases instead of guessing what happened.
+A live feed shows progress for the exact download folder you configured. Awaiting action holds downloaded files needing verification, approval or manual assignment. Completed holds imported or already installed sources, with separate selection and deletion controls. Select several files for bulk import or confirmed deletion; inspect unresolved cases instead of guessing what happened.
 
 ![Pacearr Downloads](docs/screenshots/downloads.png)
 
@@ -77,7 +77,7 @@ Set minimum quality, an upgrade target, preferred cuts, language preference and 
 
 ![Pacearr Activity](docs/screenshots/activity.png)
 
-Activity stores the latest 1,000 timestamped entries across restarts: checksums, imports, upgrades, review decisions, errors and recovery. Search it or export a text log.
+Activity shows current failed-grab counts separately from history, offers severity filtering, and records Deluge RPC methods, redacted rejection details and retry timing. It stores the latest 1,000 timestamped entries across restarts: checksums, imports, upgrades, review decisions, errors and recovery. Search it or export a text log.
 
 </details>
 
@@ -158,7 +158,7 @@ Docker images support **linux/amd64** and **linux/arm64**. Node.js 24 and ffmpeg
 
 ### Docker Compose
 
-Use `ghcr.io/daherokozuki/pacearr:latest` for easy updates, or pin `:v1.0.1`. The service, container and project are named **pacearr**.
+Use `ghcr.io/daherokozuki/pacearr:latest` for easy updates, or pin `:v1.0.2`. The service, container and project are named **pacearr**.
 
 ```yaml
 services:
@@ -328,6 +328,7 @@ Stop the worker before restoring an earlier image or application. Avoid replacin
 | Library management | Library/download views, profiles, persisted checksums and Activity |
 | Live automation | Verified imports, same-cut revisions, quality upgrades and explicit grabs |
 | `1.0.0` | Public WebUI runtime, automatic refresh and the ship-banner interface |
+| `1.0.2` | Separate Completed/Awaiting action views, visible grab queue, clear RPC errors and delayed-magnet duplicate protection |
 | `1.0.1` | Clean deployment names, portable integration tests, complete source bundle and expanded documentation/gallery |
 
 The standalone steps describe development milestones, not separate public GitHub releases. Earlier plans and the original source remain available; see [ROADMAP.md](ROADMAP.md), [CHANGELOG.md](CHANGELOG.md), the [legacy branch](https://github.com/DaHeroKozuki/Pacearr/tree/legacy/onepacerr-beta1.3) and repository history.

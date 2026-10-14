@@ -1,44 +1,38 @@
-# Set sail with Pacearr 🚢
+# Clearer downloads. Clearer decisions. 🚢
 
-**One Pace. Managed.** A live library view, visible download progress and verified upgrades—with the history of the project preserved.
+Pacearr v1.0.2 separates successful work from files needing attention and makes the Deluge grab lifecycle easier to follow. The glass layout and ship banner stay intact.
 
-![Pacearr control room](https://raw.githubusercontent.com/DaHeroKozuki/Pacearr/v1.0.1/docs/screenshots/overview.png)
+![Pacearr Downloads](https://raw.githubusercontent.com/DaHeroKozuki/Pacearr/v1.0.2/docs/screenshots/downloads.png)
 
-## What’s new in v1.0.1
+## Downloads now has distinct sections
 
-| Change | What it means for you |
-| --- | --- |
-| Clean deployment names | Project, service and container are all `pacearr`; the official Synology folder is `/volume1/docker/pacearr` |
-| Lean deployment folder | Only Compose and persistent state are needed when using the public image; cleanup archives development leftovers |
-| A richer project page | Original history, configuration reference and credits return, with current instructions, mount guidance and five WebUI screenshots |
-| Quieter live updates | Library, Overview, Downloads and Activity refresh automatically; background inventory checks no longer crowd the activity log |
-| Complete rebuildable source | Active source, portable integration/browser fixtures, packaging and screenshot tooling are published and included in a source archive |
-| Fresh public image | amd64 and arm64 builds pass unit/integration checks and a Docker health check before publication |
+- **Queued episode grabs:** requests waiting for a slot or Deluge metadata/feed confirmation. Existing torrents outside the configured folder are explained here.
+- **Downloading:** scoped torrent progress.
+- **Awaiting action:** completed downloads needing verification, approval, a profile decision or manual episode assignment—with its own single/bulk import and deletion controls.
+- **Completed:** imported or already installed source files, with a separate selection and source-deletion control. Sources remain available for seeding until explicitly deleted.
+- **Errors:** current failed jobs, actual reasons, retry timing and actions. Manual grab failures now appear here too.
 
-## Your collection, your control
+Selections are scoped to their section and cleared when a file changes category, avoiding accidental reuse of a selection after import.
 
-Search the full library, selected episodes or one release. Follow scoped Deluge progress. Import completed verified episodes, let same-cut revisions and 720p→1080p upgrades run unattended, or review custom edits with explicit episode assignments. Select one file or several for manual import or confirmed download deletion.
+## Deluge rejections explained
 
-Saved checksums survive restarts and updates. Verified copies preserve original downloads for seeding; replacements retain backups and restart-recovery journals. Activity records outcomes, errors and retries. Quality, cut, language and concurrency profiles put the release decisions in your hands.
+The previous generic “rejected read-only query” message hid the failed operation. New messages include the RPC method, error code and Deluge's reason, with saved password values redacted. Grab failures show attempt and retry timing; skipped grabs explain why they were skipped.
 
-![Pacearr Library](https://raw.githubusercontent.com/DaHeroKozuki/Pacearr/v1.0.1/docs/screenshots/library.png)
+Exact existing hashes are reused. A duplicate/being-added response naming the requested hash is treated as confirmation, not an unsuccessful new grab. Successfully accepted magnets reserve concurrency capacity while waiting for feed visibility and are not resubmitted automatically. If confirmation remains absent after five minutes, the queue asks for a Deluge check and manual Retry instead of sending another add blindly.
 
-<details><summary><b>See live downloads and profiles</b></summary>
+## Activity distinguishes current work from history
 
-![Pacearr Downloads](https://raw.githubusercontent.com/DaHeroKozuki/Pacearr/v1.0.1/docs/screenshots/downloads.png)
-![Pacearr Profiles](https://raw.githubusercontent.com/DaHeroKozuki/Pacearr/v1.0.1/docs/screenshots/profiles.png)
+A severity filter helps inspect information, warnings or errors. The current failed-grab count is shown separately from historical events, which may already be resolved. Existing history and checksum records remain intact.
 
-</details>
+![Pacearr Activity](https://raw.githubusercontent.com/DaHeroKozuki/Pacearr/v1.0.2/docs/screenshots/activity.png)
 
-*Screenshots show an isolated demonstration library.*
+## Try missing episodes
 
-## Install or update
+In Library, filter to Missing, select the episodes you want and use Grab selected episodes. Review the available releases/profile matches before submitting. Alternatively, enable Automatically grab missing episodes in Profiles and save while automation runs. Existing saved preferences are not silently changed; the default concurrency remains three unless you changed it.
 
-**Image:** `ghcr.io/daherokozuki/pacearr:v1.0.1` · Rolling tags: `:latest` and `:alpha`.
+Unavailable releases or unsupported profile matches can remain missing; the new skip/queue messages distinguish these from successful submissions and actual failures.
 
-New deployments: edit the host folders and UID:GID in [compose.yaml](https://github.com/DaHeroKozuki/Pacearr/blob/v1.0.1/compose.yaml), create a writable `data/state`, then configure the WebUI at port 49113. [Read the complete mount/setup guide](https://github.com/DaHeroKozuki/Pacearr/blob/v1.0.1/README.md#getting-started).
-
-Existing standalone Synology deployments: run [migrate-synology.sh](https://github.com/DaHeroKozuki/Pacearr/blob/v1.0.1/scripts/migrate-synology.sh) to clean the names while preserving saved paths and state. Then run [cleanup-synology.py](https://github.com/DaHeroKozuki/Pacearr/blob/v1.0.1/scripts/cleanup-synology.py) to archive unused development files. Inspect the new state mount before deleting any old test folder.
+## Update
 
 ```sh
 cd /volume1/docker/pacearr
@@ -46,14 +40,10 @@ docker-compose -p pacearr -f compose.yaml pull pacearr
 docker-compose -p pacearr -f compose.yaml up -d --no-build --no-deps --force-recreate pacearr
 ```
 
-Keep `/data/state` mounted across updates: it holds your private settings, vault keys, encrypted credentials, checksums and history. It is never included in public source archives.
+Refresh the browser once for the new assets. Preserve `/data/state`. Public images: `ghcr.io/daherokozuki/pacearr:v1.0.2`, `:latest` and compatibility tag `:alpha`, for amd64/arm64.
 
-## What’s included
+The application ZIP, complete active source archive and SHA256SUMS are attached. All earlier source/history and the expanded [setup/mount guide](https://github.com/DaHeroKozuki/Pacearr) remain available. No private state or credentials are packaged.
 
-- `pacearr-v1.0.1.zip`: application/deployment files, not personal state.
-- `pacearr-v1.0.1-source.zip`: complete active application, tests, scripts, documentation, screenshots and license.
-- `SHA256SUMS`: archive checksums.
+**Validation:** 23 unit tests, automatic import/upgrade/acquisition/bulk/restart fixtures, a delayed Deluge visibility regression, desktop/mobile UI checks, and CI Docker build/health checks before publication. Screenshots use isolated demonstration data.
 
-Current runtime: Deluge and mounted libraries, with read-only Plex connection/discovery. Plex mutations and historical Jellyfin/Emby/other-client integrations remain outside this runtime; their original source and reference are preserved in GitHub. Earlier Alpha environment/SQLite settings require explicit WebUI configuration; standalone setup.json/vault/checksum state stays compatible.
-
-Thanks to eltharynd, the One Pace team and everyone who helped bring Pacearr from its original foundation to this release. [Explore the project’s journey](https://github.com/DaHeroKozuki/Pacearr/blob/v1.0.1/README.md#the-journey-so-far) · [Join the community](https://discord.gg/u3zksrG8G6)
+[Project and setup guide](https://github.com/DaHeroKozuki/Pacearr) · [Community](https://discord.gg/u3zksrG8G6)
