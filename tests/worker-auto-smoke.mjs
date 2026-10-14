@@ -21,6 +21,7 @@ try{
 
  if(process.argv.includes('--acquisition')){
   const latest=Buffer.alloc(8192,5),freshHash='f'.repeat(40),freshName=name(1,latest);metadata.lastUpdate='2026-10-14';metadata.arcs[0].episodes[0].files={standard:{CRC32:crc(latest),hash:freshHash,magnetURI:`magnet:?xt=urn:btih:${freshHash}&dn=${encodeURIComponent(freshName)}`},archived:[{CRC32:crc(upgrade),hash:h1}]};await writeFile(temp+'/metadata.json',JSON.stringify(metadata));await writeFile(temp+'/official.html','<main>'+official(freshHash,latest,1080)+official(h1,upgrade,1080,'en, ja',' Outdated')+official(h2,missing,1080,'ja')+'</main>');
+  await api('manage/catalogue','POST');
   for(let i=0;i<100;i++){const status=await api('manage/status');if(status.acquisitions?.some(x=>x.hash===freshHash&&x.status==='queued'))break;await new Promise(r=>setTimeout(r,100))}
   const queued=JSON.parse(await readFile(temp+'/deluge.json','utf8'));assert.equal(queued[freshHash].save_path,down+'/One Pace');assert.equal(queued[freshHash].is_finished,false);assert.equal(Object.keys(queued).filter(x=>x===freshHash).length,1);
   await writeFile(down+'/One Pace/'+freshName,latest);queued[freshHash]={...queued[freshHash],state:'Seeding',file_progress:[1],progress:100,is_finished:true,total_done:8192,total_remaining:0};await writeFile(temp+'/deluge.json',JSON.stringify(queued));

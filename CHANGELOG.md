@@ -1,3 +1,13 @@
+# v1.3.0 — Clear downloads, mobile control
+
+- Reconcile disk and Deluge manifests; distinguish genuinely absent sources from untracked files and pending downloads.
+- Preserve imported-source completion across torrent removal using persistent path/root/fingerprint evidence; changed files require review again.
+- Make completed-file deletion idempotent for known absent entries, validate bulk paths before mutations, and offer stale-entry dismissal without deleting library media.
+- Add separate Untracked/Removed sections and bulk ignore controls that retain source files and seeding; explain that Clear selection only unticks.
+- Persist eight discovery intervals from 15 minutes to 24 hours independently of import and progress processing; expose upcoming work and next discovery.
+- Add phone file cards, touch controls, mobile dialogs and sailboat bookmark/touch icons.
+- Group repeated Activity messages optionally while preserving complete timestamped export.
+
 # v1.2.0 — Official One Pace sync and persistent catalogue
 
 - Collect official RSS releases, including checksum-only archived entries, with Atom/page fallbacks; try direct One Pace torrent files before Nyaa/caches.

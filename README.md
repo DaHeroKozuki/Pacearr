@@ -6,7 +6,7 @@
 
 **One Pace library automation, built for self-hosters.**
 
-[![Version](https://img.shields.io/badge/version-1.2.0-38bdf8?style=flat-square)](https://github.com/DaHeroKozuki/Pacearr/releases)
+[![Version](https://img.shields.io/badge/version-1.3.0-38bdf8?style=flat-square)](https://github.com/DaHeroKozuki/Pacearr/releases)
 [![GitHub Packages](https://img.shields.io/badge/ghcr.io-daherokozuki%2Fpacearr-blue?style=flat-square&logo=github)](https://github.com/DaHeroKozuki/Pacearr/pkgs/container/pacearr)
 [![GitHub Release](https://img.shields.io/github/v/release/DaHeroKozuki/Pacearr?include_prereleases&style=flat-square)](https://github.com/DaHeroKozuki/Pacearr/releases)
 [![GitHub Issues](https://img.shields.io/github/issues/DaHeroKozuki/Pacearr?style=flat-square)](https://github.com/DaHeroKozuki/Pacearr/issues)
@@ -316,7 +316,7 @@ Only private-network HTTP IP endpoints are currently accepted for Deluge/Plex co
 
 ## Official One Pace sync and persistent catalogue
 
-Pacearr checks One Pace's RSS feed every 15 minutes, with Atom and the release page as fallbacks. It collects torrent/magnet identity, episode/arc names, chapter/anime coverage, quality, languages, release dates and archival/change information. Direct `onepace.net/torrents/…` files are tried before Nyaa and torrent caches, and their info hashes must match the published identity before selected payload is started.
+Pacearr checks One Pace's RSS feed at the saved interval (15 minutes by default), with Atom and the release page as fallbacks. It collects torrent/magnet identity, episode/arc names, chapter/anime coverage, quality, languages, release dates and archival/change information. Direct `onepace.net/torrents/…` files are tried before Nyaa and torrent caches, and their info hashes must match the published identity before selected payload is started.
 
 A SQLite catalogue at `/data/state/pacearr.db` retains episode mappings, historical release records, installed fingerprints and confirmed assignments. Initial data includes a licensed snapshot of the community API and its full Shaved/Kuma/Onigashima and bundle records; those records are clearly distinguished from official releases. API and feed failures retain the last validated data. No external database service or extra mount is required. Existing credentials, checksum records and preferences remain in the same state volume.
 
@@ -391,6 +391,7 @@ Stop the worker before restoring an earlier image or application. Avoid replacin
 | Library management | Library/download views, profiles, persisted checksums and Activity |
 | Live automation | Verified imports, same-cut revisions, quality upgrades and explicit grabs |
 | `1.0.0` | Public WebUI runtime, automatic refresh and the ship-banner interface |
+| `1.3.0` | Reconciled removed sources, persistent completed-file identity, mobile control, bookmark icons and selectable discovery intervals |
 | `1.2.0` | Official RSS/Atom sync, direct One Pace torrents, persistent episode/release catalogue and actionable unknown-version replacement |
 | `1.1.2` | Persistent retry/cancel state, verified torrent metadata caching and fallback, untracked-file discovery and confirmed bulk recovery |
 | `1.1.1` | Selective bundles, exact selections, 480p and usable fallbacks, scoped download controls, optional labels and completed-download recovery |
@@ -826,3 +827,15 @@ Pacearr is an independent community project and is not affiliated with, endorsed
   <strong>Pacearr</strong><br>
   One Pace. Managed.
 </p>
+
+## Download reconciliation and mobile control (v1.3)
+
+The Downloads screen separates active downloads, Completed sources, Awaiting action, Untracked files, Removed source files and Errors. Completed sources retain their imported identity when a torrent record is removed, provided their file fingerprint is unchanged. Files absent from both disk and Deluge disappear when refreshed; absent completed files still listed by Deluge appear under Removed source files with **Remove stale entry**. A failed folder scan does not masquerade as successful deletion.
+
+**Delete selected** removes completed source files within the configured download folder and clears already absent entries. Library copies are preserved. Untracked sources require explicit completion confirmation before destructive deletion or import. **Ignore selected** keeps source files and seeding intact. **Clear selection** only unticks checkboxes. Ignored and dismissed entries can be inspected with **Show ignored / deleted items** and restored through Review where a file still exists.
+
+Settings offers checks every **15, 30 or 45 minutes; 1, 3, 6, 12 or 24 hours**. The saved interval controls automatic missing-episode and upgrade discovery independently of continuous download/import processing. Start Automation or refresh the episode catalogue for an immediate discovery pass. Activity can group repeated identical events while the downloadable history retains individual timestamps. Overview shows pending work and the next discovery time.
+
+Phone screens use readable file cards, touch controls and compact navigation while retaining the glass/ocean theme. Browser bookmarks use the sailboat icon; Apple home-screen bookmarks use the matching touch icon.
+
+<p align="center"><img src="docs/screenshots/mobile-library.png" alt="Pacearr Library on a phone" width="320"> <img src="docs/screenshots/mobile-downloads.png" alt="Pacearr Downloads on a phone" width="320"></p>
