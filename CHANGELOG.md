@@ -1,3 +1,14 @@
+# v1.4.0 — Observation Haki for your library
+
+- Retry degraded feeds independently of the discovery schedule, persist deadlines/cooldowns across restarts, share concurrent refreshes and trigger discovery after recovery.
+- Parse Atom XHTML and safely derive missing official enclosures from matching magnets; quarantine malformed entries without weakening identity checks.
+- Hold suspicious shrinkage, conflicting current releases and moved/renumbered mappings; associate known Specials using exact existing hash/checksum evidence.
+- Add Check now, separate source/client/folder/space health, release-change history, current unresolved diagnostics and restart recovery summaries.
+- Reserve free space before acquisitions/imports/resumes, include selected active payloads and shared-filesystem requirements, and retry space-blocked work without losing originals.
+- Add profile-complete inventory messaging and secret-redacted versioned diagnostic exports.
+- Refresh eight historical release introductions with distinct One Piece references while retaining tags, assets and technical detail.
+- Add outage/restart/rate-limit/low-space integration coverage, browser controls and historical-release editing checks.
+
 # v1.3.0 — Clear downloads, mobile control
 
 - Reconcile disk and Deluge manifests; distinguish genuinely absent sources from untracked files and pending downloads.

@@ -62,7 +62,7 @@ export async function importMissing({downloadRoot,sourceRel,libraryRoot,targetRe
  const src=await open(source,constants.O_RDONLY|constants.O_NOFOLLOW);let temporary=null,writer=null;
  try{
   const before=await src.stat();if(!before.isFile())throw Error('Source is not a regular file');
-  const free=await statfs(lib);if(Number(free.bavail)*Number(free.bsize)<before.size+minimumFreeBytes)throw Error('Insufficient library free space');
+  const free=await statfs(lib);if(Number(free.bavail)*Number(free.bsize)<before.size+minimumFreeBytes){const error=Error('Waiting for free space: library needs the copy size plus a 2 GiB reserve');error.code='PACEARR_SPACE';throw error;}
   await access(folder,constants.W_OK|constants.X_OK);temporary=join(folder,'.pacearr-partial-'+randomBytes(12).toString('hex'));if(journalMissing)await journalMissing({targetRel,partialRel:relative(lib,temporary),expectedCRC});writer=await open(temporary,'wx',0o640);
   const buffer=Buffer.alloc(256*1024);while(true){const {bytesRead}=await src.read(buffer,0,buffer.length,null);if(!bytesRead)break;let offset=0;while(offset<bytesRead){const {bytesWritten}=await writer.write(buffer,offset,bytesRead-offset,null);if(!bytesWritten)throw Error('Unable to copy source bytes');offset+=bytesWritten}}await writer.sync();await writer.close();writer=null;
   const copied=await hashLibraryFile(lib,relative(lib,temporary));const after=await src.stat();
@@ -71,7 +71,7 @@ export async function importMissing({downloadRoot,sourceRel,libraryRoot,targetRe
   await link(temporary,destination);await unlink(temporary);temporary=null;
   const dir=await open(folder,constants.O_RDONLY);try{await dir.sync()}finally{await dir.close()}
   return {path:relative(lib,destination),crc:copied.crc,size:copied.size};
- }finally{if(writer)await writer.close().catch(()=>{});await src.close();if(temporary)await unlink(temporary).catch(()=>{})}
+ }catch(error){if(error.code==='ENOSPC'){error.code='PACEARR_SPACE';error.message='Waiting for free space: filesystem filled during copy; partial copy cleaned and source retained'}throw error;}finally{if(writer)await writer.close().catch(()=>{});await src.close();if(temporary)await unlink(temporary).catch(()=>{})}
 }
 
 // Authorised replacement preserves the previous file and journals before publication.

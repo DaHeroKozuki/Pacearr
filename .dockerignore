@@ -18,3 +18,5 @@
 !catalogue-seed/**
 
 !download-reconciliation.mjs
+
+!reliability.mjs

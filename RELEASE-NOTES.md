@@ -1,28 +1,35 @@
-# Pacearr v1.3.0 — Clear decks. Stay in control. 🚢
+# Observation Haki was strong with this build. 👁️
 
-**A cleaner download workflow, a control room that fits your phone, and release checks on your schedule.** This update keeps the glass/ocean design and strengthens how Pacearr reconciles the files you already have.
+One Pace’s feed timed out. Pacearr checked the horizon—and found a retry instead of waiting for the next six-hour departure.
 
-![Pacearr control room](https://raw.githubusercontent.com/DaHeroKozuki/Pacearr/v1.3.0/docs/screenshots/overview.png)
+**v1.4.0 adds independent feed recovery, connection health and space-aware processing**, with the same glass-and-ocean control room.
 
-## Downloads that tell the whole story
+![Pacearr overview with connection health](https://raw.githubusercontent.com/DaHeroKozuki/Pacearr/v1.4.0/docs/screenshots/overview.png)
 
-Completed, Awaiting action, Untracked files and Removed source files now have separate sections. Removing a torrent record does not erase the proven completion of an unchanged imported source. A completed manifest entry whose file is absent offers **Remove stale entry**. Files gone from both disk and Deluge disappear on refresh. Existing v1.2 completion signatures are reused.
+## A timeout shouldn’t strand the crew
 
-Bulk deletion clears already absent known entries and validates existing paths before removal. Library copies stay intact. Bulk **Ignore selected** preserves files and seeding. Clear selection explicitly means unticking files. Untracked files still need explicit completion confirmation before importing.
+- Failed or degraded feeds retry after approximately **1, 2, 5, 10 and then 15 minutes**, with a small timing variation and respect for server-requested cooldowns.
+- Retry state survives restarts. Concurrent refresh requests share one fetch; cached episode mappings remain available while imports continue independently.
+- Atom entries without an enclosure can use the deterministic official torrent URL only after their magnet’s hash is validated. Torrent metadata still has to match that exact hash before payload starts.
+- Malformed entries are quarantined without discarding valid neighbours. RSS recovery triggers a fresh eligibility pass without waiting for the normal schedule.
 
-## Your schedule, continuous imports
+## Know what the container is doing
 
-Choose checks every **15, 30 or 45 minutes; 1, 3, 6, 12 or 24 hours** under Settings. This persists across restarts and controls automatic discovery, while download progress and completed imports continue independently. Overview shows upcoming work and the next discovery time. Refresh the catalogue or start Automation for an immediate pass.
+**Check now** refreshes release information without changing the saved interval or enabling paused automation. Overview and System show separate One Pace, Deluge, library and download-folder health indicators, including available space.
 
-## Take the control room with you
+System also shows the last successful feed check, next retry, quarantined entries and a restart-recovery summary. Release history distinguishes new episodes, revised edits, quality upgrades and corrected metadata, alongside recorded grab outcomes or the next decision needed.
 
-Readable file cards, touch-sized controls and mobile dialogs retain every field and action on phones. A matching sailboat icon appears in bookmarks and Apple home-screen shortcuts. Activity can group repeated identical events; exported history retains each original timestamp.
+Activity keeps its original timestamped history and adds a versioned **diagnostic report**, separating current unresolved work from old failures. Saved credentials are excluded and secret values are redacted.
 
-<p><img src="https://raw.githubusercontent.com/DaHeroKozuki/Pacearr/v1.3.0/docs/screenshots/mobile-library.png" alt="Mobile library" width="300"></p>
+## Keep the library on course
 
-## Update
+Unexpected release-list shrinkage, conflicting current identities and moved episode assignments are held for review while validated catalogue data is retained. Established slots are protected from unrelated renumbering. Known Warship Island and Fan Letter releases can use their existing Specials slots when exact hash/checksum evidence confirms the association.
 
-Retain your existing Compose settings and state/media mounts. Pull **ghcr.io/daherokozuki/pacearr:latest** (or pin **v1.3.0**) and recreate the service. Source, tests, existing documentation and project history remain in GitHub and the complete source archive. Refresh your browser once for the new assets.
+Grabs and imports check free space, keep a **2 GiB reserve**, account for selected active payloads and combine download/import requirements when folders share a filesystem. Unknown-size magnets are checked again after their file metadata arrives, before managed payload resumes. Space-blocked work waits and retries automatically; source files and existing library copies are preserved. Overview reports **Library complete for your profile** only when its current inventory has no missing or verification/upgrade decisions outstanding.
+
+## Update your existing installation
+
+Keep your current Compose file and mounts. Pull `ghcr.io/daherokozuki/pacearr:latest` or pin `v1.4.0`, then recreate the service:
 
 ```sh
 cd /path/to/pacearr
@@ -30,4 +37,6 @@ docker compose -p pacearr -f compose.yaml pull pacearr
 docker compose -p pacearr -f compose.yaml up -d --no-build --no-deps --force-recreate pacearr
 ```
 
-On older Synology installations, use `docker-compose`. No host path migration is required. Existing credentials, checksum records, episode catalogue and saved automation preferences are reused. Live NAS behavior should be checked in Downloads and Activity after updating.
+Older Synology installations use `docker-compose`. Refresh the browser once for the updated screens. Credentials, checksums, catalogue, profiles, schedule and pause decisions remain in the existing state mount.
+
+The source archive includes the application, tests and documentation. Earlier release introductions have also been given individual One Piece themes; their technical details, tags and assets remain intact.

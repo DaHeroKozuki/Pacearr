@@ -6,7 +6,7 @@
 
 **One Pace library automation, built for self-hosters.**
 
-[![Version](https://img.shields.io/badge/version-1.3.0-38bdf8?style=flat-square)](https://github.com/DaHeroKozuki/Pacearr/releases)
+[![Version](https://img.shields.io/badge/version-1.4.0-38bdf8?style=flat-square)](https://github.com/DaHeroKozuki/Pacearr/releases)
 [![GitHub Packages](https://img.shields.io/badge/ghcr.io-daherokozuki%2Fpacearr-blue?style=flat-square&logo=github)](https://github.com/DaHeroKozuki/Pacearr/pkgs/container/pacearr)
 [![GitHub Release](https://img.shields.io/github/v/release/DaHeroKozuki/Pacearr?include_prereleases&style=flat-square)](https://github.com/DaHeroKozuki/Pacearr/releases)
 [![GitHub Issues](https://img.shields.io/github/issues/DaHeroKozuki/Pacearr?style=flat-square)](https://github.com/DaHeroKozuki/Pacearr/issues)
@@ -391,6 +391,7 @@ Stop the worker before restoring an earlier image or application. Avoid replacin
 | Library management | Library/download views, profiles, persisted checksums and Activity |
 | Live automation | Verified imports, same-cut revisions, quality upgrades and explicit grabs |
 | `1.0.0` | Public WebUI runtime, automatic refresh and the ship-banner interface |
+| `1.4.0` | Independent feed recovery, service health, Check now, release history, catalogue guards, space-aware processing and diagnostic exports |
 | `1.3.0` | Reconciled removed sources, persistent completed-file identity, mobile control, bookmark icons and selectable discovery intervals |
 | `1.2.0` | Official RSS/Atom sync, direct One Pace torrents, persistent episode/release catalogue and actionable unknown-version replacement |
 | `1.1.2` | Persistent retry/cancel state, verified torrent metadata caching and fallback, untracked-file discovery and confirmed bulk recovery |
@@ -839,3 +840,17 @@ Settings offers checks every **15, 30 or 45 minutes; 1, 3, 6, 12 or 24 hours**. 
 Phone screens use readable file cards, touch controls and compact navigation while retaining the glass/ocean theme. Browser bookmarks use the sailboat icon; Apple home-screen bookmarks use the matching touch icon.
 
 <p align="center"><img src="docs/screenshots/mobile-library.png" alt="Pacearr Library on a phone" width="320"> <img src="docs/screenshots/mobile-downloads.png" alt="Pacearr Downloads on a phone" width="320"></p>
+
+## Feed recovery, health and unattended operation (v1.4)
+
+**Observation Haki for the jobs that need a second look.** A failed RSS request no longer waits for the next normal release schedule. RSS/Atom failures, partial feeds and website fallback schedule persistent retries at roughly 1, 2, 5, 10 and then 15 minutes, with up to 10% timing variation. Server `Retry-After` instructions take precedence. Only one official refresh runs at a time. Retry state survives restarts, and recovery prompts an immediate eligibility pass. File processing uses the saved catalogue while the source refresh runs independently.
+
+**Check now** in Overview or System refreshes metadata and requests an eligibility pass without changing the saved schedule or bypassing pause/stop controls. One Pace, Deluge, library access and download access each have a health indicator. Health checks are read-only and cached for 30 seconds; available filesystem space is shown alongside access results.
+
+System records feed health separately from a successful website fallback: last successful XML feed, next retry and quarantined entries remain visible. An incomplete Atom enclosure can be resolved to the official hash-based torrent URL only from a validated matching magnet; downloaded torrent metadata still requires exact hash verification. Malformed records are quarantined individually. All-invalid feeds, conflicting identities, unexpected movement of established episode slots and release-list reductions exceeding 30% (once at least 20 records exist) retain the validated catalogue and raise review information. Unknown arcs do not receive invented season numbers. Known Specials may use existing hash/checksum mappings.
+
+Release changes identify new episodes, revised releases, quality upgrades and corrected metadata. Each row includes its recorded grab status or explains the next eligibility decision. A restart summary lists retained checksum records, pending work, recovery journals and feed retry timing. Overview reports a profile-complete library only when its current inventory has no missing, unverified or outstanding version decisions. This describes the current validated catalogue, not a guarantee that the provider has published every possible episode.
+
+Before new managed payload or imports, Pacearr estimates required free space with 5% copy margin and a 2 GiB reserve. Selected active downloads are included; shared filesystems combine download and library requirements. Magnet sizes are unknown until their manifest arrives, so paused managed torrents are checked again before payload resumes. Low-space work waits automatically and is retried after capacity returns; verified sources and previous installed versions remain protected. Other applications can consume space after a check, so copy-time space failures also retain retryable state and clean partial copies.
+
+Activity offers both the original text history and a versioned JSON diagnostic report. The report includes service health, feed retry status, restart information and current unresolved entries alongside historical activity. Configuration/vault contents are excluded; saved secret values and credential URL parameters are redacted.

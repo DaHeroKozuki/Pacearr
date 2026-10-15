@@ -8,3 +8,5 @@
 @media(max-width:360px){.metric-grid{grid-template-columns:1fr}.hero-copy h1{font-size:29px}.hero-chips{display:none}.workspace{padding:10px!important}}
 
 @media(max-width:600px){thead th.select-header{display:flex;align-items:center;gap:12px}thead th.select-header::after{content:'Select visible files';color:#97b9c9}thead th:not(.select-header){display:none!important}}
+
+.service-health{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:12px;margin:18px 0}.health-card{background:#102a3a99;border:1px solid #315165;border-radius:14px;padding:14px;min-width:0;overflow-wrap:anywhere}.health-card p{margin:6px 0}.health-state{text-transform:capitalize;font-weight:700;color:#9ff7df}.health-degraded,.health-review,.health-low-space,.health-unavailable,.health-offline{border-color:#bd914c}.health-degraded .health-state,.health-review .health-state,.health-low-space .health-state,.health-unavailable .health-state,.health-offline .health-state{color:#ffd187}@media(max-width:600px){.service-health{grid-template-columns:1fr 1fr;gap:8px}.health-card{padding:10px;font-size:12px}}@media(max-width:360px){.service-health{grid-template-columns:1fr}}
