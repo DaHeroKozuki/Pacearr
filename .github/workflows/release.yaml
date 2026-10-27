@@ -73,12 +73,12 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ghcr.io/daherokozuki/pacearr:v1.4.0
+            ghcr.io/daherokozuki/pacearr:v1.5.0
             ghcr.io/daherokozuki/pacearr:latest
             ghcr.io/daherokozuki/pacearr:alpha
           labels: |
             org.opencontainers.image.source=https://github.com/DaHeroKozuki/Pacearr
-            org.opencontainers.image.version=1.4.0
+            org.opencontainers.image.version=1.5.0
             org.opencontainers.image.revision=${{ github.sha }}
       - name: Package application update
         run: python3 scripts/package-release.py
@@ -89,13 +89,13 @@ jobs:
       - name: Publish release and source bundle
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.4.0
+          tag_name: v1.5.0
           target_commitish: ${{ github.sha }}
-          name: Pacearr v1.4.0 — Observation Haki for Your Library
+          name: Pacearr v1.5.0 — Safe Arc Rebuilds & Episode Upgrades
           body_path: RELEASE-NOTES.md
           make_latest: true
           prerelease: false
           files: |
-            dist/pacearr-v1.4.0.zip
-            dist/pacearr-v1.4.0-source.zip
+            dist/pacearr-v1.5.0.zip
+            dist/pacearr-v1.5.0-source.zip
             dist/SHA256SUMS

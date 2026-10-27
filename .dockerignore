@@ -20,3 +20,7 @@
 !download-reconciliation.mjs
 
 !reliability.mjs
+
+!release-identity.mjs
+!arc-plan.mjs
+!arc-upgrade.mjs

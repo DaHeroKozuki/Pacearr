@@ -4,7 +4,7 @@ import hashlib,json
 root=Path(__file__).resolve().parent.parent
 version=json.loads((root/'package.json').read_text())['version']
 out=root/'dist';out.mkdir(exist_ok=True)
-application=['server.mjs','beta-readonly.mjs','beta-policy.mjs','import-engine.mjs','official-releases.mjs','download-actions.mjs','torrent-metadata.mjs','episode-mapping.mjs','onepace-feed.mjs','episode-catalogue.mjs','download-reconciliation.mjs','reliability.mjs','package.json','package-lock.json','Dockerfile','compose.synology.yaml','.dockerignore','README.md','RELEASE-NOTES.md','LICENSE','.env.example']
+application=['server.mjs','beta-readonly.mjs','beta-policy.mjs','import-engine.mjs','official-releases.mjs','download-actions.mjs','torrent-metadata.mjs','episode-mapping.mjs','onepace-feed.mjs','episode-catalogue.mjs','download-reconciliation.mjs','reliability.mjs','release-identity.mjs','arc-plan.mjs','arc-upgrade.mjs','package.json','package-lock.json','Dockerfile','compose.synology.yaml','.dockerignore','README.md','RELEASE-NOTES.md','LICENSE','.env.example']
 application += [str(p.relative_to(root)) for p in (root/'web').iterdir() if p.is_file()]
 application += [str(p.relative_to(root)) for p in (root/'catalogue-seed').iterdir() if p.is_file()]
 source=set(application+['package.json','package-lock.json','compose.yaml','CHANGELOG.md','ROADMAP.md','CONTRIBUTING.md','.github/workflows/release.yaml','.gitignore'])

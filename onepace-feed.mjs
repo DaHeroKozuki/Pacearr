@@ -1,3 +1,4 @@
+import {canonicalRelease} from './release-identity.mjs';
 import {retryAfterMS} from './reliability.mjs';
 import {XMLParser,XMLValidator,XMLBuilder} from 'fast-xml-parser';
 const list=x=>x===undefined?[]:Array.isArray(x)?x:[x];
@@ -26,7 +27,7 @@ export function parseOnePaceFeed(xml){
   const published=Date.parse(text(e.pubDate||e.published)),updated=Date.parse(text(e.updated||e.pubDate||e.published));if(!Number.isFinite(published))throw Error('Invalid release date');
   const crc=/\[([a-f0-9]{8})\](?:\.[^.]+)?$/i.exec(name)?.[1]?.toUpperCase()||legacyCRC;
   const record={identity,hash,crc,filename:name,magnetURI:magnet,torrentURL,title,arcName:match?.[1]||null,episodeNumber:match?Number(match[2]):null,variant,height,audio:languages('Audio tracks'),subtitles:languages('Subtitle tracks'),mangaChapters:fields.get('Covered manga chapters')||null,animeEpisodes:fields.get('Covered anime episodes')||null,published,updated:Number.isFinite(updated)?updated:published,outdated,changelog:clean(description.match(/<details\b[\s\S]*?<\/details>/i)?.[0]||''),nyaaURL:(atom?links.map(x=>x?.['@_href']):[text(e.link)]).find(x=>/^https:\/\/nyaa\.si\/view\/\d+$/.test(x||''))||null,officialURL:'https://onepace.net/en/releases#urn:btih:'+hash,source:'official-release'};
-  const key=hash||identity;const previous=result.get(key);if(blocked.has(key))continue;if(previous&&JSON.stringify(previous)!==JSON.stringify(record)){result.delete(key);blocked.add(key);throw Error('Conflicting official feed entries')}result.set(key,record);
+  const key=hash||identity;const previous=result.get(key);if(blocked.has(key))continue;if(previous&&JSON.stringify(previous)!==JSON.stringify(canonicalRelease(record))){result.delete(key);blocked.add(key);throw Error('Conflicting official feed entries')}result.set(key,canonicalRelease(record));
  }catch(error){result.quarantined.push({identity:text(e?.guid||e?.id),reason:error.message})}
  }
  if(!result.size)throw Error('No valid official release entries: '+result.quarantined.map(x=>x.reason).slice(0,3).join('; '));return result;

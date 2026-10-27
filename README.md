@@ -6,7 +6,7 @@
 
 **One Pace library automation, built for self-hosters.**
 
-[![Version](https://img.shields.io/badge/version-1.4.0-38bdf8?style=flat-square)](https://github.com/DaHeroKozuki/Pacearr/releases)
+[![Version](https://img.shields.io/badge/version-1.5.0-38bdf8?style=flat-square)](https://github.com/DaHeroKozuki/Pacearr/releases)
 [![GitHub Packages](https://img.shields.io/badge/ghcr.io-daherokozuki%2Fpacearr-blue?style=flat-square&logo=github)](https://github.com/DaHeroKozuki/Pacearr/pkgs/container/pacearr)
 [![GitHub Release](https://img.shields.io/github/v/release/DaHeroKozuki/Pacearr?include_prereleases&style=flat-square)](https://github.com/DaHeroKozuki/Pacearr/releases)
 [![GitHub Issues](https://img.shields.io/github/issues/DaHeroKozuki/Pacearr?style=flat-square)](https://github.com/DaHeroKozuki/Pacearr/issues)
@@ -391,6 +391,7 @@ Stop the worker before restoring an earlier image or application. Avoid replacin
 | Library management | Library/download views, profiles, persisted checksums and Activity |
 | Live automation | Verified imports, same-cut revisions, quality upgrades and explicit grabs |
 | `1.0.0` | Public WebUI runtime, automatic refresh and the ship-banner interface |
+| `1.5.0` | Canonical feed identities, verified batch/arc upgrades, staged whole-season publication and restart recovery |
 | `1.4.0` | Independent feed recovery, service health, Check now, release history, catalogue guards, space-aware processing and diagnostic exports |
 | `1.3.0` | Reconciled removed sources, persistent completed-file identity, mobile control, bookmark icons and selectable discovery intervals |
 | `1.2.0` | Official RSS/Atom sync, direct One Pace torrents, persistent episode/release catalogue and actionable unknown-version replacement |
@@ -854,3 +855,17 @@ Release changes identify new episodes, revised releases, quality upgrades and co
 Before new managed payload or imports, Pacearr estimates required free space with 5% copy margin and a 2 GiB reserve. Selected active downloads are included; shared filesystems combine download and library requirements. Magnet sizes are unknown until their manifest arrives, so paused managed torrents are checked again before payload resumes. Low-space work waits automatically and is retried after capacity returns; verified sources and previous installed versions remain protected. Other applications can consume space after a check, so copy-time space failures also retain retryable state and clean partial copies.
 
 Activity offers both the original text history and a versioned JSON diagnostic report. The report includes service health, feed retry status, restart information and current unresolved entries alongside historical activity. Configuration/vault contents are excluded; saved secret values and credential URL parameters are redacted.
+
+## Verified episode and arc upgrades (v1.5)
+
+New releases trigger an eligibility assessment using your saved automation, revision, quality and cut preferences. Full filenames, short titles and batch labels are normalised before identity comparisons. Fractional optional releases are kept distinct. Conflicting individual records are quarantined while unaffected updates proceed; large feed shrinkage remains a catalogue-wide safety hold. RSS/fallback comparisons use fields known in both formats.
+
+For an official full batch, Pacearr verifies the torrent info hash and extracts the exact canonical file paths, sizes, filename checksums and chapter labels. It associates the arc with an existing season, verifies installed release identities and resolution, and checks that the canonical replacement set retains installed chapter coverage. Unknown identities, incomplete coverage, downgrades, unsupported folder layouts and genuinely ambiguous mappings require review. An older batch is not used to replace newer individually published releases.
+
+Eligible batches use one shared grab with only required files selected. Optional cuts such as 01.5 are not automatically placed into canonical episode slots. When all canonical files are complete and verified, Pacearr stages a replacement season, rechecks the live originals, renames the old season into `.pacearr-arc-backup-<id>`, and publishes the complete prepared directory. Previous media, source downloads and regular sidecars are retained. Stages and retained seasons are hidden from library inventory. A durable journal recovers interrupted preparation/publication; pauses apply before publication, and file changes invalidate the transaction. The brief directory switch is recoverable rather than a filesystem-wide multi-directory atomic operation.
+
+Verified manifest-derived canonical mappings persist in the catalogue and take precedence over a companion API that shifts slots around an optional file. This is important for the October 26 Loguetown release: its manifest has canonical 01/02/03 plus optional 01.5, while the companion API currently numbers those four files as four consecutive slots. The runtime does not hard-code Loguetown’s season or torrent hash; the same identity, coverage and transaction checks apply to other arcs.
+
+**System → Arc upgrades** explains each plan, progress/review state, retained-directory path and recheck action. After updating, **Check now** requests a release assessment. Existing per-episode upgrades remain available; a structural revision without a complete verified batch/mapping is retained for review instead of overwriting files by episode number alone.
+
+![Arc upgrade verification and recovery](docs/screenshots/arc-upgrades.png)

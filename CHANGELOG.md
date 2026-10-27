@@ -1,3 +1,14 @@
+# v1.5.0 — Safe arc rebuilds and episode upgrades
+
+- Fix full-filename feed titles falsely triggering episode-move guards; normalise batch/cut identities and preserve fractional optional numbering.
+- Quarantine conflicting records individually, retain global shrinkage protection and stop fallback-format differences inflating release-change history.
+- Verify official full-batch manifests and assess complete canonical replacement sets against installed identities, chapter coverage and profile/quality rules.
+- Queue required files once, skip optional cuts, stage/checksum a complete season and preserve the old directory during journaled group publication.
+- Recover interrupted staging/publication, respect pause/stop before commit, preserve source files/sidecars and exclude retained directories from inventory.
+- Persist verified canonical arc overrides so companion API ordering cannot reintroduce an optional-file slot shift.
+- Add System arc-upgrade status/recheck controls and real October 26 Loguetown manifest fixtures.
+- Test split/merged episode sets, partial downloads, optional 01.5, corrupt sources, pause/restart recovery and duplicate prevention.
+
 # v1.4.0 — Observation Haki for your library
 
 - Retry degraded feeds independently of the discovery schedule, persist deadlines/cooldowns across restarts, share concurrent refreshes and trigger discovery after recovery.

@@ -1,3 +1,4 @@
+import {canonicalRelease} from './release-identity.mjs';
 export function parseOfficialReleases(html){
  if(typeof html!=='string'||html.length>12*1024*1024)throw Error('Official release page exceeds limit');
  const starts=[...html.matchAll(/<li\b[^>]*\bid="urn:btih:([a-f0-9]{40})"[^>]*>/gi)];
@@ -15,7 +16,7 @@ export function parseOfficialReleases(html){
   if(!height||!audio)continue;
   const nyaa=block.match(/href="(https:\/\/nyaa\.si\/view\/\d+)"/)?.[1]||null;
   const item={hash,crc,height,audio:codes(audio),subtitles:codes(subtitles),title:clean(block.match(/<h3[^>]*>([\s\S]*?)<\/h3>/)?.[1]||''),outdated:/\bOutdated\b/.test(clean(info)),officialURL:'https://onepace.net/en/releases#urn:btih:'+hash,nyaaURL:nyaa,source:'official-release'};
-  const existing=result.get(hash);if(existing&&JSON.stringify(existing)!==JSON.stringify(item))throw Error('Ambiguous official release hash');result.set(hash,item);
+  const existing=result.get(hash);if(existing&&JSON.stringify(existing)!==JSON.stringify(canonicalRelease(item)))throw Error('Ambiguous official release hash');result.set(hash,canonicalRelease(item));
  }
  if(!result.size)throw Error('Official release page format unavailable');return result;
 }

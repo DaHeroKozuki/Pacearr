@@ -1,35 +1,41 @@
-# Observation Haki was strong with this build. 👁️
+# Franky refitted the season. Nobody went overboard. 🔧🏴‍☠️
 
-One Pace’s feed timed out. Pacearr checked the horizon—and found a retry instead of waiting for the next six-hour departure.
+**v1.5.0 fixes missed episode upgrades and adds verified whole-arc replacement.** The October 26 Loguetown rerelease exposed two problems: filename-shaped feed titles were triggering false catalogue conflicts, and the new batch layout could not safely replace the old episode arrangement. This release addresses both, with a reusable workflow for future arc revisions.
 
-**v1.4.0 adds independent feed recovery, connection health and space-aware processing**, with the same glass-and-ocean control room.
+## Episode handling: stop confusing filenames with renumbering
 
-![Pacearr overview with connection health](https://raw.githubusercontent.com/DaHeroKozuki/Pacearr/v1.4.0/docs/screenshots/overview.png)
+- Normalise friendly titles, full release filenames, batch labels and variant suffixes before comparing arc identities.
+- Keep optional fractional releases such as **01.5** distinct from episode **01**.
+- Quarantine genuinely conflicting individual records while accepting unaffected catalogue updates. Suspicious large feed reductions still retain the saved catalogue.
+- Compare fields shared by RSS and website fallback records so restoring RSS does not fabricate hundreds of release changes.
 
-## A timeout shouldn’t strand the crew
+## Upgrade the arc, not just the episode number
 
-- Failed or degraded feeds retry after approximately **1, 2, 5, 10 and then 15 minutes**, with a small timing variation and respect for server-requested cooldowns.
-- Retry state survives restarts. Concurrent refresh requests share one fetch; cached episode mappings remain available while imports continue independently.
-- Atom entries without an enclosure can use the deterministic official torrent URL only after their magnet’s hash is validated. Torrent metadata still has to match that exact hash before payload starts.
-- Malformed entries are quarantined without discarding valid neighbours. RSS recovery triggers a fresh eligibility pass without waiting for the normal schedule.
+Pacearr verifies the official batch’s torrent info hash, then reads its individual file manifest. It selects the canonical episode files for your preferred standard/extended batch and checks the proposed replacement against verified installed identities, chapter coverage, quality and profile controls. An older batch does not supersede a newer individual release.
 
-## Know what the container is doing
+For a verified full-batch revision or quality upgrade:
 
-**Check now** refreshes release information without changing the saved interval or enabling paused automation. Overview and System show separate One Pace, Deluge, library and download-folder health indicators, including available space.
+1. Queue required files together, with unrelated and fractional optional cuts unselected.
+2. Wait for the complete canonical replacement set. Reuse an installed file when its verified checksum already matches.
+3. Stage and checksum the replacements while the installed season remains live.
+4. Recheck the installed files, then publish the complete new season directory.
+5. Preserve the old directory under a hidden `.pacearr-arc-backup-*` name and update the catalogue/checksum records.
 
-System also shows the last successful feed check, next retry, quarantined entries and a restart-recovery summary. Release history distinguishes new episodes, revised edits, quality upgrades and corrected metadata, alongside recorded grab outcomes or the next decision needed.
+An interrupted directory switch has a persistent recovery journal. Pause/stop decisions are respected before publication; restart recovery can finish verified publication or retain the old season. Sources and sidecars are preserved. Hidden stages and retained seasons are excluded from library inventory.
 
-Activity keeps its original timestamped history and adds a versioned **diagnostic report**, separating current unresolved work from old failures. Saved credentials are excluded and secret values are redacted.
+## Loguetown and future reorganised arcs
 
-## Keep the library on course
+The verified October 26 standard and extended manifests contain canonical **01, 02 and 03**, plus optional **01.5**. The companion API currently places the optional file in its second slot. Pacearr uses the official manifest’s file identities and canonical numbers for the replacement instead of copying that shifted ordering into the library.
 
-Unexpected release-list shrinkage, conflicting current identities and moved episode assignments are held for review while validated catalogue data is retained. Established slots are protected from unrelated renumbering. Known Warship Island and Fan Letter releases can use their existing Specials slots when exact hash/checksum evidence confirms the association.
+The same workflow can handle verified full batches with split, merged, reordered or additional canonical episodes when the replacement retains installed chapter coverage. It blocks downgrades and retains ambiguous or incomplete sets for review. Releases without a complete verified mapping continue through the existing per-episode policy or require review; safety checks have not been disabled.
 
-Grabs and imports check free space, keep a **2 GiB reserve**, account for selected active payloads and combine download/import requirements when folders share a filesystem. Unknown-size magnets are checked again after their file metadata arrives, before managed payload resumes. Space-blocked work waits and retries automatically; source files and existing library copies are preserved. Overview reports **Library complete for your profile** only when its current inventory has no missing or verification/upgrade decisions outstanding.
+**System → Arc upgrades** shows the plan, progress, reason, retained-directory location and a recheck action. Optional cuts remain separate and are not automatically inserted into the canonical season.
 
-## Update your existing installation
+![Verified arc upgrade using isolated demonstration files](https://raw.githubusercontent.com/DaHeroKozuki/Pacearr/v1.5.0/docs/screenshots/arc-upgrades.png)
 
-Keep your current Compose file and mounts. Pull `ghcr.io/daherokozuki/pacearr:latest` or pin `v1.4.0`, then recreate the service:
+## Update
+
+Keep your existing Compose file, media mounts and state volume. Pull `ghcr.io/daherokozuki/pacearr:latest` or pin `v1.5.0`, then recreate the service:
 
 ```sh
 cd /path/to/pacearr
@@ -37,6 +43,6 @@ docker compose -p pacearr -f compose.yaml pull pacearr
 docker compose -p pacearr -f compose.yaml up -d --no-build --no-deps --force-recreate pacearr
 ```
 
-Older Synology installations use `docker-compose`. Refresh the browser once for the updated screens. Credentials, checksums, catalogue, profiles, schedule and pause decisions remain in the existing state mount.
+Use `docker-compose` on older Synology installations. Refresh the browser once, then use **Check now** to request a fresh release assessment. Automation, update/quality preferences and stop controls still determine which work may run.
 
-The source archive includes the application, tests and documentation. Earlier release introductions have also been given individual One Piece themes; their technical details, tags and assets remain intact.
+Credentials, existing checksum records, catalogue history and saved preferences remain in the state mount. No source-video payload was downloaded for development: the real Loguetown torrent metadata was verified, and media operations were exercised with isolated test files.

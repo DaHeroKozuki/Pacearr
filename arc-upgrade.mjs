@@ -1,0 +1,28 @@
+import {mkdir,lstat,readdir,readFile,writeFile,rename,rm,copyFile,realpath,open} from 'node:fs/promises';import {join,basename,extname} from 'node:path';import {randomBytes} from 'node:crypto';import {hashLibraryFile} from './beta-policy.mjs';import {importMissing} from './import-engine.mjs';import {requireSpace} from './reliability.mjs';
+const video=name=>/\.(mkv|mp4|m4v|avi|mov|ts|m2ts)$/i.test(name);
+function simple(name){if(typeof name!=='string'||!name||name!==basename(name)||name==='.'||name==='..'||/[\\\x00-\x1f]/.test(name))throw Error('Unsafe arc upgrade path');return name}
+async function exists(path){try{return await lstat(path)}catch(e){if(e.code==='ENOENT')return null;throw e}}
+async function directory(path){const s=await lstat(path);if(!s.isDirectory()||s.isSymbolicLink()||await realpath(path)!==path)throw Error('Unsafe arc upgrade directory')}
+async function checkFiles(root,folder,files,{exact=false}={}){await directory(join(root,folder));if(exact){const names=(await readdir(join(root,folder))).filter(video).sort();if(JSON.stringify(names)!==JSON.stringify(files.map(f=>simple(f.name)).sort()))throw Error('Arc files changed during upgrade')}
+ for(const f of files){const p=join(root,folder,simple(f.name)),s=await lstat(p);if(!s.isFile()||s.isSymbolicLink())throw Error('Arc file is not a regular file');const h=await hashLibraryFile(root,folder+'/'+f.name);if(h.size!==f.size||h.crc.toUpperCase()!==f.crc.toUpperCase())throw Error('Arc checksum changed: '+f.name)}}
+async function sync(root){const d=await open(root,'r');try{await d.sync()}finally{await d.close()}}
+function validate(j,root){if(j.root!==root||! /^[a-f0-9]{24}$/.test(j.id)||!/^Season\s+\d{1,3}$/i.test(j.folder)||j.stage!=='.pacearr-upgrade-'+j.id||j.backup!=='.pacearr-arc-backup-'+j.id||!j.targets?.length||!j.originals?.length)throw Error('Invalid arc recovery journal');simple(j.folder);for(const f of [...j.targets,...j.originals]){simple(f.name);if(!/^[a-f0-9]{8}$/i.test(f.crc)||!Number.isSafeInteger(f.size)||f.size<0)throw Error('Invalid arc file identity')}}
+async function ownedStage(root,j){const p=join(root,j.stage);await directory(p);if((await readFile(join(p,'.owner'),'utf8'))!==j.id)throw Error('Arc stage ownership differs');return p}
+export async function recoverArcUpgrade(root,j,{save=async()=>{},canCommit=()=>true}={}){
+ root=await realpath(root);validate(j,root);const live=join(root,j.folder),backup=join(root,j.backup),stage=join(root,j.stage),liveInfo=await exists(live),backupInfo=await exists(backup);
+ if(liveInfo&&backupInfo){await checkFiles(root,j.folder,j.targets,{exact:true});await checkFiles(root,j.backup,j.originals,{exact:true});j.phase='committed';await save(j);if(await exists(stage)){await ownedStage(root,j);await rm(stage,{recursive:true})}return {status:'committed',backup:j.backup}}
+ if(j.phase==='staging'){if(backupInfo||!liveInfo)throw Error('Unexpected staging recovery layout');await checkFiles(root,j.folder,j.originals,{exact:true});if(await exists(stage)){await ownedStage(root,j);await rm(stage,{recursive:true})}return {status:'retry',backup:null}}
+ const stageRoot=await ownedStage(root,j);await checkFiles(stageRoot,j.folder,j.targets,{exact:true});
+ if(!canCommit()){if(backupInfo&&!liveInfo){await rename(backup,live);await sync(root);j.phase='prepared';await save(j);}return {status:'paused',backup:null};}
+ if(liveInfo){if(backupInfo)throw Error('Arc backup collision');await checkFiles(root,j.folder,j.originals,{exact:true});await rename(live,backup);await sync(root);j.phase='retired';await save(j)}else{if(!backupInfo)throw Error('Original arc directory is missing');await checkFiles(root,j.backup,j.originals,{exact:true})}
+ try{await rename(join(stageRoot,j.folder),live);await sync(root)}catch(e){if(!await exists(live))await rename(backup,live);throw e}
+ j.phase='committed';await save(j);await rm(stageRoot,{recursive:true});return {status:'committed',backup:j.backup};
+}
+export async function replaceArc({libraryRoot,downloadRoot,folder,originals,targets,save=async()=>{},canCommit=()=>true,afterPhase=async()=>{}}){
+ const root=await realpath(libraryRoot),down=await realpath(downloadRoot),id=randomBytes(12).toString('hex'),j={id,root,folder,stage:'.pacearr-upgrade-'+id,backup:'.pacearr-arc-backup-'+id,originals,targets:targets.map(({name,crc,size})=>({name,crc,size})),phase:'staging'};validate(j,root);await checkFiles(root,folder,originals,{exact:true});await requireSpace(root,targets.reduce((n,f)=>n+f.size,0));
+ const stage=join(root,j.stage);await mkdir(stage,{mode:0o750});await writeFile(join(stage,'.owner'),id,{flag:'wx',mode:0o600});await save(j);await mkdir(join(stage,folder));
+ for(const entry of await readdir(join(root,folder),{withFileTypes:true})){if(entry.isSymbolicLink()||!entry.isFile())throw Error('Arc contains a subdirectory or symbolic link; review required');if(!video(entry.name)){const from=join(root,folder,entry.name),before=await lstat(from);await copyFile(from,join(stage,folder,entry.name));const after=await lstat(from);if(before.ino!==after.ino||before.size!==after.size||before.mtimeMs!==after.mtimeMs)throw Error('Arc sidecar changed during staging')}}
+ for(const f of targets)await importMissing({downloadRoot:f.sourceRoot||down,sourceRel:f.sourceRel,libraryRoot:stage,targetRel:folder+'/'+simple(f.name),expectedCRC:f.crc});
+ await checkFiles(stage,folder,j.targets,{exact:true});j.phase='prepared';await save(j);await afterPhase('prepared',j);if(!canCommit())return {status:'paused',journal:j};
+ return {...await recoverArcUpgrade(root,j,{save:async value=>{await save(value);await afterPhase(value.phase,value)},canCommit}),journal:j};
+}
