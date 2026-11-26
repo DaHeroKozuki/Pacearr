@@ -869,3 +869,24 @@ Verified manifest-derived canonical mappings persist in the catalogue and take p
 **System → Arc upgrades** explains each plan, progress/review state, retained-directory path and recheck action. After updating, **Check now** requests a release assessment. Existing per-episode upgrades remain available; a structural revision without a complete verified batch/mapping is retained for review instead of overwriting files by episode number alone.
 
 ![Arc upgrade verification and recovery](docs/screenshots/arc-upgrades.png)
+
+## v1.6: official takeovers and backup management
+
+Official One Pace releases can replace known supplemental episodes when their chapter coverage matches exactly. Content checksums, Deluge completion, quality and revision preferences still decide whether replacement is safe. Unknown or differing coverage remains visible for review.
+
+Open **Settings → Upgrade backups** to manage retained previous editions. Backups are moved outside the library to `/data/state/backups`; automatic deletion defaults to off. Select immediate cleanup after verification or 1/7/14/30-day retention, and use the selection controls for manual bulk cleanup. Existing tracked backups can be migrated with the maintenance button. Files involved in unfinished recovery are protected.
+
+The existing state volume needs sufficient room for these backups. To use a separate writable volume, add an environment variable and mount to your service, for example:
+
+```yaml
+environment:
+  PACEARR_BACKUP_DIR: /backups
+volumes:
+  - /path/to/pacearr-backups:/backups:rw
+```
+
+Merge these entries with your existing service configuration. Keep this directory outside **all** media-server scanned libraries and outside downloads. Stop the container before moving an established backup store; changing its path alone does not relocate stored backups. Existing tracked copies are migrated only after their live replacements are verified. Untracked files are never swept up by backup cleanup. Seeding sources remain in the download folder.
+
+**System → Download diagnostic report** includes mapping conflicts and backup maintenance issues. The same export remains available under Activity.
+
+![Upgrade backup controls](docs/screenshots/backup-controls.png)

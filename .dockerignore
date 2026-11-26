@@ -24,3 +24,5 @@
 !release-identity.mjs
 !arc-plan.mjs
 !arc-upgrade.mjs
+
+!backup-manager.mjs

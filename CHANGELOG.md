@@ -1,3 +1,10 @@
+# v1.6.0 — Official Episode Takeovers & Backup Controls
+
+- Allow exact-coverage official releases to supersede known supplemental slots while retaining historical identities.
+- Move verified tracked backups outside media folders; add opt-in retention and guarded single/bulk cleanup.
+- Retire obsolete post-arc grab requests, reuse durable completion evidence, expose mapping/backup review items, and name worker error stages.
+- Add diagnostics download to System.
+
 # v1.5.0 — Safe arc rebuilds and episode upgrades
 
 - Fix full-filename feed titles falsely triggering episode-move guards; normalise batch/cut identities and preserve fractional optional numbering.

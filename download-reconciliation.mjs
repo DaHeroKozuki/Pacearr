@@ -12,3 +12,5 @@ export function retainedOutcome(row,queue,downloadRoot,libraryRoot){
   return !!item.sourceSignature&&item.sourceSignature===`${row.actualSize??row.size}:${row.mtimeMs}:${row.ctimeMs}`;
  })||null;
 }
+
+export function retireObsoleteGrabs(state){let count=0;for(const g of Object.values(state.manualGrabs||{})){const plan=state.arcUpgrades?.[g.season];if(g.root&&state.settings?.downloadPath&&g.root!==state.settings.downloadPath)continue;if(!plan||plan.root!==state.settings?.libraryPath||!['committed','current'].includes(plan.status)||['imported','expired','cancelled'].includes(g.status)||plan.files?.some(f=>f.episodeNumber===g.episode))continue;g.status='expired';g.reason='Resolved: completed arc upgrade superseded this obsolete episode number';g.retryAt=0;count++;}return count;}
